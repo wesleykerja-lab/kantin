@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KantinPintar POS - Sistem Kasir & Dapur Realtime</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f97316">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @keyframes pulse-border {
+
+            0%,
+            100% {
+                border-color: #f97316;
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+            }
+
+            50% {
+                border-color: #ea580c;
+                box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+            }
+        }
+
+        .calling-active {
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-8px);
+            }
+
+            40%,
+            80% {
+                transform: translateX(8px);
+            }
+        }
+
+        .shake-anim {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* CSS Cetak Struk Printer Thermal 58mm / 80mm */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printableReceiptArea,
+            #printableReceiptArea * {
+                visibility: visible;
+            }
+
+            #printableReceiptArea {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 58mm;
+                padding: 4px;
+                margin: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- ========================================================= -->
+    <!-- 1. MODAL LOGIN PIN TABLET (WAJIB LOGIN SEBELUM AKSES)      -->
+    <!-- ========================================================= -->
+    <div id="loginScreen"
+        class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 sm:p-7 border border-slate-100 flex flex-col items-center animate-fade-in"
+            id="loginCard">
+            <!-- Icon & Header -->
+            <div
+                class="w-16 h-16 bg-orange-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 mb-3">
+                <i class="fa-solid fa-utensils"></i>
+            </div>
+            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight" id="loginCanteenTitle">KantinPintar POS
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5 text-center">Pilih peran perangkat & masukkan PIN Anda</p>
+
+            <!-- Pilihan Role Akun -->
+            <div class="grid grid-cols-3 gap-2 w-full my-4">
+                <button type="button" onclick="selectLoginRole('kasir')" id="roleBtn-kasir"
+                    class="role-selector-btn py-2.5 px-2 rounded-2xl border-2 border-orange-500 bg-orange-50 text-orange-700 font-extrabold text-xs flex flex-col items-center gap-1 transition">
+                    <i class="fa-solid fa-cash-register text-base"></i>
+                    <span>Kasir</span>
+                </button>
+                <button type="button" onclick="selectLoginRole('dapur')" id="roleBtn-dapur"
+                    class="role-selector-btn py-2.5 px-2 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 font-bold text-xs flex flex-col items-center gap-1 hover:border-slate-300 transition">
+                    <i class="fa-solid fa-bullhorn text-base"></i>
+                    <span>Dapur</span>
+                </button>
+                <button type="button" onclick="selectLoginRole('admin')" id="roleBtn-admin"
+                    class="role-selector-btn py-2.5 px-2 rounded-2xl border-2 border-slate-200 bg-white text-slate-600 font-bold text-xs flex flex-col items-center gap-1 hover:border-slate-300 transition">
+                    <i class="fa-solid fa-user-shield text-base"></i>
+                    <span>Admin</span>
+                </button>
+            </div>
+
+            <!-- Display PIN Dots -->
+            <div class="w-full flex justify-center items-center gap-3 my-2 py-2">
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"
+                    id="dot-0"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"
+                    id="dot-1"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"
+                    id="dot-2"></span>
+                <span class="pin-dot w-4 h-4 rounded-full border-2 border-slate-300 transition-all duration-200"
+                    id="dot-3"></span>
+            </div>
+            <p id="loginErrorMessage" class="text-xs font-bold text-red-500 h-4 text-center mt-1"></p>
+
+            <!-- Touchscreen Numpad -->
+            <div class="grid grid-cols-3 gap-2.5 w-full mt-3">
+                <button type="button" onclick="pressPin('1')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">1</button>
+                <button type="button" onclick="pressPin('2')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">2</button>
+                <button type="button" onclick="pressPin('3')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">3</button>
+                <button type="button" onclick="pressPin('4')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">4</button>
+                <button type="button" onclick="pressPin('5')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">5</button>
+                <button type="button" onclick="pressPin('6')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">6</button>
+                <button type="button" onclick="pressPin('7')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">7</button>
+                <button type="button" onclick="pressPin('8')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">8</button>
+                <button type="button" onclick="pressPin('9')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">9</button>
+                <button type="button" onclick="clearPin()"
+                    class="h-12 rounded-2xl bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-600 font-bold text-xs transition">HAPUS</button>
+                <button type="button" onclick="pressPin('0')"
+                    class="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-black text-lg transition">0</button>
+                <button type="button" onclick="backspacePin()"
+                    class="h-12 rounded-2xl bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-600 text-sm transition">
+                    <i class="fa-solid fa-delete-left"></i>
+                </button>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-center w-full text-[11px] text-slate-400">
+                <span>PIN Standar: <strong>Kasir (1234)</strong> • <strong>Dapur (2222)</strong> • <strong>Admin
+                        (9999)</strong></span>
+            </div>
+
+            <!-- Tombol Buka Layar TV Pengambilan Tanpa PIN -->
+            <button type="button" onclick="openTvDisplayDirect()"
+                class="mt-3 w-full py-2.5 px-3 bg-slate-800 hover:bg-slate-900 active:scale-98 text-amber-400 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 border border-slate-700 transition shadow-sm">
+                <i class="fa-solid fa-tv text-sm"></i>
+                <span>Buka Layar TV Pengambilan (Tanpa PIN)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 2. TOP HEADER NAVIGATION                                  -->
+    <!-- ========================================================= -->
+    <header
+        class="bg-slate-900 text-white px-4 py-2.5 shadow-md flex flex-wrap items-center justify-between gap-2 z-20">
+        <div class="flex items-center gap-3">
+            <div class="bg-orange-500 p-2 rounded-xl text-white shadow-sm">
+                <i class="fa-solid fa-utensils text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-extrabold text-base sm:text-lg leading-tight" id="headerBrandName">KantinPintar POS
+                    </h1>
+                    <span id="connectionBadge"
+                        class="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Online</span>
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400" id="currentDateDisplay">Memuat tanggal...</p>
+            </div>
+        </div>
+
+        <!-- Tombol Navigasi Mode (Sesuai Hak Akses Role) -->
+        <div class="flex items-center bg-slate-800 p-1 rounded-xl overflow-x-auto max-w-full gap-1"
+            id="navTabsContainer">
+            <button onclick="switchMode('kasir')" id="btn-mode-kasir"
+                class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-orange-500 text-white">
+                <i class="fa-solid fa-cash-register"></i>
+                <span>Tablet 1: Kasir</span>
+            </button>
+            <button onclick="switchMode('panggilan')" id="btn-mode-panggilan"
+                class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Tablet 2: Dapur</span>
+            </button>
+            <button onclick="switchMode('display')" id="btn-mode-display"
+                class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-tv"></i>
+                <span>Layar TV</span>
+            </button>
+            <button onclick="switchMode('pengaturan')" id="btn-mode-pengaturan"
+                class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-gear"></i>
+                <span>Atur Menu & Toko</span>
+            </button>
+            <button onclick="switchMode('laporan')" id="btn-mode-laporan"
+                class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i>
+                <span>Laporan & Excel</span>
+            </button>
+        </div>
+
+        <!-- Tombol Tambahan & User Info -->
+        <div class="flex items-center gap-2">
+            <!-- Tombol Pasang PWA di Tablet -->
+            <button id="pwaInstallBtn" onclick="installPWA()"
+                class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden md:inline">Pasang App Tablet</span>
+            </button>
+
+            <!-- Tombol Cetak Ulang Struk Terakhir -->
+            <button onclick="reprintLastReceipt()"
+                class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
+                title="Cetak Ulang Struk Terakhir">
+                <i class="fa-solid fa-receipt text-orange-400"></i>
+                <span class="hidden lg:inline">Struk Terakhir</span>
+            </button>
+
+            <div class="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                <i class="fa-solid fa-circle-user text-orange-400"></i>
+                <div class="text-left leading-none">
+                    <span id="activeUserName" class="text-xs font-bold text-white block">Kasir</span>
+                    <span id="activeUserRole" class="text-[10px] text-slate-400 uppercase font-semibold">Kasir</span>
+                </div>
+            </div>
+
+            <button onclick="handleLogout()"
+                class="bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                title="Ganti Pengguna / Logout">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span class="hidden sm:inline">Keluar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- 3. MAIN WORKSPACE                                         -->
+    <!-- ========================================================= -->
+    <main class="flex-1 flex overflow-hidden relative">
+
+        <!-- ========================================================= -->
+        <!-- AREA TABLET 1: KASIR                                      -->
+        <!-- ========================================================= -->
+        <section id="panel-kasir"
+            class="w-full h-full flex flex-col md:flex-row border-r border-slate-200 bg-slate-50 transition-all duration-300">
+            <!-- Sisi Kiri: Menu Makanan -->
+            <div class="flex-1 flex flex-col h-full overflow-hidden p-3.5 sm:p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <span
+                            class="text-[11px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-2.5 py-0.5 rounded-full">Tablet
+                            1 • Kasir</span>
+                        <h2 class="text-lg font-extrabold text-slate-800 mt-0.5">Pilih Menu Makanan</h2>
+                    </div>
+
+                    <!-- Search Bar Menu -->
+                    <div class="flex-1 max-w-xs relative mx-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchMenuInput" oninput="renderMenuGrid()"
+                            placeholder="Cari nama menu..."
+                            class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:border-orange-500 shadow-sm">
+                    </div>
+
+                    <div class="text-right bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm shrink-0">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Antrean Berikutnya</span>
+                        <span class="text-xl font-black text-orange-600" id="nextQueueBadge">#001</span>
+                    </div>
+                </div>
+
+                <!-- Kategori Menu Filter -->
+                <div class="flex gap-1.5 mb-3 overflow-x-auto pb-1" id="categoryTabs">
+                    <button onclick="filterCategory('Semua')"
+                        class="cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-orange-500 text-white shadow-sm transition">Semua</button>
+                    <button onclick="filterCategory('Makanan')"
+                        class="cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition">Makanan</button>
+                    <button onclick="filterCategory('Snack')"
+                        class="cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition">Snack</button>
+                    <button onclick="filterCategory('Minuman')"
+                        class="cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 transition">Minuman</button>
+                </div>
+
+                <!-- Grid Kartu Menu Tablet Friendly -->
+                <div id="menuGrid"
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto pb-6 pr-1 flex-1">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Sisi Kanan: Keranjang & Pembayaran Multi-Metode -->
+            <div
+                class="w-full md:w-84 lg:w-96 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-1/2 md:h-full shadow-md">
+                <div class="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping text-orange-500"></i>
+                        <span>Pesanan Saat Ini</span>
+                    </h3>
+                    <button onclick="clearCart()"
+                        class="text-xs text-red-500 hover:text-red-700 font-bold">Kosongkan</button>
+                </div>
+
+                <!-- List Items di Keranjang -->
+                <div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <!-- Form Catatan Pesanan Keseluruhan -->
+                <div class="px-3 pt-1">
+                    <input type="text" id="orderNotesInput" placeholder="Catatan pesanan (misal: bungkus, pedas)..."
+                        class="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:border-orange-500">
+                </div>
+
+                <!-- Total & Pilihan Metode Pembayaran (Cash, QRIS, Transfer) -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-500">Total Tagihan</span>
+                        <span class="text-2xl font-black text-slate-900" id="cartTotal">Rp 0</span>
+                    </div>
+
+                    <!-- TAB METODE PEMBAYARAN -->
+                    <div>
+                        <span class="text-[11px] font-bold text-slate-500 mb-1.5 block">Metode Pembayaran:</span>
+                        <div class="grid grid-cols-3 gap-1.5 bg-slate-200/80 p-1 rounded-xl">
+                            <button type="button" onclick="selectPaymentMethod('Tunai')" id="payTab-Tunai"
+                                class="pay-tab-btn py-1.5 rounded-lg text-xs font-black bg-white text-orange-600 shadow-sm transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                                <span>Tunai</span>
+                            </button>
+                            <button type="button" onclick="selectPaymentMethod('QRIS')" id="payTab-QRIS"
+                                class="pay-tab-btn py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>QRIS</span>
+                            </button>
+                            <button type="button" onclick="selectPaymentMethod('Transfer')" id="payTab-Transfer"
+                                class="pay-tab-btn py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-building-columns"></i>
+                                <span>Transfer</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FORM PEMBAYARAN SESUAI METODE -->
+                    <!-- 1. Bagian Tunai / Cash -->
+                    <div id="sectionPay-Tunai" class="space-y-1.5 pt-1">
+                        <div class="flex justify-between items-center text-xs text-slate-600 font-bold">
+                            <span>Uang Tunai:</span>
+                            <span id="changeDisplay" class="text-emerald-600 font-black">Kembali: Rp 0</span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="number" id="cashInput" oninput="calculateChange()" placeholder="Jumlah uang..."
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold focus:outline-none focus:border-orange-500">
+                            <button onclick="setExactCash()"
+                                class="px-3 py-1 text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl whitespace-nowrap">Uang
+                                Pas</button>
+                        </div>
+                        <div class="flex gap-1 overflow-x-auto pt-0.5">
+                            <button onclick="addPresetCash(10000)"
+                                class="px-2.5 py-0.5 text-[11px] font-bold bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-orange-600">10rb</button>
+                            <button onclick="addPresetCash(20000)"
+                                class="px-2.5 py-0.5 text-[11px] font-bold bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-orange-600">20rb</button>
+                            <button onclick="addPresetCash(50000)"
+                                class="px-2.5 py-0.5 text-[11px] font-bold bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-orange-600">50rb</button>
+                            <button onclick="addPresetCash(100000)"
+                                class="px-2.5 py-0.5 text-[11px] font-bold bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-orange-600">100rb</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Bagian QRIS (Mesin EDC) -->
+                    <div id="sectionPay-QRIS"
+                        class="hidden bg-orange-50/80 p-3 rounded-xl border border-orange-200 text-center space-y-1">
+                        <div class="flex items-center justify-center gap-2 text-orange-600 font-bold text-xs">
+                            <i class="fa-solid fa-credit-card text-base"></i>
+                            <span>Pembayaran QRIS via Mesin EDC</span>
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-tight">Proses pembayaran QRIS langsung di mesin EDC Anda. Setelah transaksi di EDC berhasil/disetujui, ketuk tombol konfirmasi di bawah untuk mencetak nomor antrean.</p>
+                    </div>
+
+                    <!-- 3. Bagian Transfer Bank -->
+                    <div id="sectionPay-Transfer"
+                        class="hidden bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                        <span class="text-xs font-bold text-slate-500 block">Tujuan Transfer Bank:</span>
+                        <div
+                            class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex justify-between items-center">
+                            <div>
+                                <span class="text-xs font-black text-slate-800 block" id="bankNameDisplay">BCA</span>
+                                <span class="text-sm font-mono font-black text-orange-600 select-all"
+                                    id="bankNumberDisplay">8830-1234-5678</span>
+                                <span class="text-[11px] text-slate-500 block" id="bankHolderDisplay">a.n Kantin
+                                    Sekolah</span>
+                            </div>
+                            <button onclick="copyBankNumber()"
+                                class="p-2 text-xs bg-white hover:bg-slate-100 rounded-lg border border-slate-200 text-slate-600"
+                                title="Salin Rekening">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Aksi Pembayaran -->
+                    <button onclick="processPayment()" id="btnPay" disabled
+                        class="w-full py-3.5 px-4 bg-orange-500 hover:bg-orange-600 active:scale-98 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span id="btnPayText">Bayar & Cetak Struk</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- AREA TABLET 2: DAPUR & PANGGILAN SUARA                    -->
+        <!-- ========================================================= -->
+        <section id="panel-panggilan"
+            class="hidden w-full h-full flex flex-col bg-slate-100 p-4 overflow-hidden transition-all duration-300">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div>
+                    <span
+                        class="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">Tablet
+                        2 • Dapur</span>
+                    <h2 class="text-lg font-extrabold text-slate-800 mt-0.5">Antrean Pesanan Masuk</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="testVoice()"
+                        class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg font-bold shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-volume-high text-orange-500"></i>
+                        <span>Tes Suara</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner Sedang Dipanggil -->
+            <div id="nowCallingBanner"
+                class="bg-slate-900 text-white rounded-2xl p-4 mb-3 shadow-md flex items-center justify-between border-2 border-slate-800">
+                <div>
+                    <span class="text-[11px] uppercase tracking-wider text-orange-400 font-extrabold block">Sedang
+                        Dipanggil</span>
+                    <div class="flex items-baseline gap-3 mt-0.5">
+                        <span id="callingNumberDisplay" class="text-4xl font-black text-white">-</span>
+                        <span id="callingItemsSummary"
+                            class="text-xs sm:text-sm text-slate-300 truncate max-w-[200px] sm:max-w-[300px]">Belum ada
+                            panggilan</span>
+                    </div>
+                </div>
+                <button onclick="repeatCall()" id="btnRepeatCall" disabled
+                    class="bg-orange-500 hover:bg-orange-600 disabled:bg-slate-800 disabled:text-slate-600 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>Panggil Ulang</span>
+                </button>
+            </div>
+
+            <!-- List Kartu Antrean Dapur -->
+            <div id="queueList" class="flex-1 overflow-y-auto space-y-3 pr-1 pb-6">
+                <!-- Rendered by JS -->
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- AREA LAYAR TV DISPLAY MURID                               -->
+        <!-- ========================================================= -->
+        <section id="panel-display"
+            class="hidden w-full h-full bg-slate-900 text-white p-4 sm:p-6 overflow-hidden flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-xs uppercase font-extrabold tracking-widest text-emerald-400">LAYAR PENGAMBILAN
+                        AKTIF</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="testVoice()"
+                        class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                        <i class="fa-solid fa-volume-high text-orange-400"></i>
+                        <span>Cek Suara TV</span>
+                    </button>
+                    <button onclick="toggleFullscreen()"
+                        class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
+                        title="Layar Penuh">
+                        <i class="fa-solid fa-expand text-amber-400"></i>
+                        <span>Layar Penuh</span>
+                    </button>
+                    <button onclick="showLoginScreen()"
+                        class="bg-slate-800 hover:bg-red-600 text-slate-400 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition"
+                        title="Tutup / Menu">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center mb-5">
+                <h2 class="text-2xl sm:text-4xl font-black tracking-wider text-orange-400 uppercase">STATUS ANTREAN
+                    KANTIN</h2>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Silakan ambil pesanan jika nomor Anda sudah berada di
+                    kolom SIAP DIAMBIL</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 overflow-hidden">
+                <!-- Kolom Disiapkan -->
+                <div class="bg-slate-800/90 rounded-3xl p-5 border border-slate-700 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+                        <h3 class="text-xl font-extrabold text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-fire-burner"></i> SEDANG DISIAPKAN
+                        </h3>
+                        <span id="tvPreparingCount"
+                            class="bg-amber-400/20 text-amber-300 px-3 py-0.5 rounded-full text-xs font-bold">0
+                            Antrean</span>
+                    </div>
+                    <div id="tvPreparingGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 overflow-y-auto flex-1">
+                        <!-- Numbers -->
+                    </div>
+                </div>
+
+                <!-- Kolom Siap Diambil -->
+                <div class="bg-slate-800/90 rounded-3xl p-5 border border-emerald-500/40 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+                        <h3 class="text-xl font-extrabold text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> SILAKAN DIAMBIL
+                        </h3>
+                        <span id="tvReadyCount"
+                            class="bg-emerald-400/20 text-emerald-300 px-3 py-0.5 rounded-full text-xs font-bold">0
+                            Siap</span>
+                    </div>
+                    <div id="tvReadyGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 overflow-y-auto flex-1">
+                        <!-- Numbers -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- AREA PENGATURAN MENU, TOKO, QRIS & PIN                    -->
+        <!-- ========================================================= -->
+        <section id="panel-pengaturan" class="hidden w-full h-full bg-slate-50 p-4 sm:p-6 overflow-y-auto">
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800">Pengaturan Menu & Pembayaran</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Kelola menu, ketersediaan stok, info QRIS, rekening
+                            bank, serta PIN tablet.</p>
+                    </div>
+                    <button onclick="switchMode('kasir')"
+                        class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold self-start">
+                        <i class="fa-solid fa-arrow-left mr-1.5"></i> Kembali
+                    </button>
+                </div>
+
+                <!-- 1. Pengaturan Identitas Kantin & Rekening Pembayaran -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-store text-orange-500"></i> Identitas Kantin & Akun Pembayaran (QRIS /
+                        Bank)
+                    </h3>
+                    <form onsubmit="handleSaveSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Nama Kantin (Header Struk):</label>
+                            <input type="text" id="settingCanteenName"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Alamat / Lokasi:</label>
+                            <input type="text" id="settingCanteenAddress"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Nama Bank Transfer:</label>
+                            <input type="text" id="settingBankName" placeholder="BCA / Mandiri / BRI"
+                                class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 mb-1">Nomor Rekening & a.n:</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="settingBankNumber" placeholder="No Rekening"
+                                    class="w-1/2 px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold">
+                                <input type="text" id="settingBankHolder" placeholder="Atas Nama"
+                                    class="w-1/2 px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block font-bold text-slate-600 mb-1">URL / Link Gambar QRIS (atau unggah
+                                gambar):</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="settingQrisImage"
+                                    class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs">
+                                <input type="file" id="qrisFileInput" accept="image/*"
+                                    onchange="handleQrisFileUpload(event)" class="hidden">
+                                <button type="button" onclick="document.getElementById('qrisFileInput').click()"
+                                    class="bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl font-bold border border-slate-300">
+                                    <i class="fa-solid fa-upload"></i> Unggah Gambar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2 flex justify-end">
+                            <button type="submit"
+                                class="bg-slate-900 hover:bg-black text-white px-5 py-2 rounded-xl font-extrabold text-xs">
+                                Simpan Pengaturan Toko
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 2. Kelola PIN Akun Kasir / Dapur / Admin -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-shield-halved text-orange-500"></i> Pengaturan PIN Akses Perangkat
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="usersPinList">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- 3. Form Tambah Menu Baru -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-extrabold text-slate-700 mb-4 flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-circle-plus text-orange-500"></i> Tambah Menu Makanan / Minuman Baru
+                    </h3>
+                    <form onsubmit="handleSaveMenu(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <div class="sm:col-span-5">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Nama Menu</label>
+                            <input type="text" id="inputMenuName" required placeholder="Contoh: Nasi Katsu Teriyaki"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Harga (Rp)</label>
+                            <input type="number" id="inputMenuPrice" required min="500" step="500" placeholder="15000"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Kategori</label>
+                            <select id="inputMenuCat"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
+                                <option value="Makanan">Makanan</option>
+                                <option value="Snack">Snack</option>
+                                <option value="Minuman">Minuman</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Ikon</label>
+                            <select id="inputMenuIcon"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
+                                <option value="🍚">🍚 Nasi</option>
+                                <option value="🍝">🍝 Pasta</option>
+                                <option value="🍗">🍗 Ayam</option>
+                                <option value="🍜">🍜 Mie / Bakso</option>
+                                <option value="🥪">🥪 Roti / Snack</option>
+                                <option value="🥤">🥤 Minuman</option>
+                                <option value="☕">☕ Kopi / Teh</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-12 flex justify-end mt-1">
+                            <button type="submit"
+                                class="bg-orange-500 hover:bg-orange-600 text-white font-extrabold px-5 py-2.5 rounded-xl text-sm shadow-sm transition">
+                                Simpan Menu ke Database
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 4. List Menu Aktif & Saklar Stok (Tersedia / Habis) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div
+                        class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 font-bold text-slate-700 text-sm flex justify-between items-center">
+                        <span>Daftar Menu & Ketersediaan Stok</span>
+                        <span class="text-xs text-slate-400 font-normal">Klik tombol status untuk mengubah stok</span>
+                    </div>
+                    <div id="settingsMenuList" class="divide-y divide-slate-100">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- AREA LAPORAN PENJUALAN & EKSPOR EXCEL                     -->
+        <!-- ========================================================= -->
+        <section id="panel-laporan" class="hidden w-full h-full bg-slate-50 p-4 sm:p-6 overflow-y-auto">
+            <div class="max-w-5xl mx-auto space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800">Laporan Penjualan Kantin</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Data tersimpan di database SQLite dan dapat
+                            diekspor langsung ke file Excel (.xlsx).</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="downloadExcelReport()"
+                            class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow flex items-center gap-2 transition">
+                            <i class="fa-solid fa-file-excel text-base"></i>
+                            <span>Download File Excel (.xlsx)</span>
+                        </button>
+                        <button onclick="openClearLogsModal()"
+                            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 active:scale-95 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold shadow-sm flex items-center gap-2 transition"
+                            title="Bersihkan seluruh riwayat transaksi">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Hapus Semua Log</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Omzet Hari Ini</span>
+                        <h3 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1" id="repTodayRevenue">Rp 0</h3>
+                        <p class="text-xs text-slate-500 mt-1" id="repTodayTx">0 Transaksi</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Omzet Bulan Ini</span>
+                        <h3 class="text-2xl sm:text-3xl font-black text-orange-600 mt-1" id="repMonthRevenue">Rp 0</h3>
+                        <p class="text-xs text-slate-500 mt-1" id="repMonthTx">0 Transaksi</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Penyimpanan Transaksi</span>
+                        <h3 class="text-xl font-black text-emerald-600 mt-1 flex items-center gap-2">
+                            <i class="fa-solid fa-database"></i> SQLite Aktif
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">Kapasitas jutaan baris bertahun-tahun</p>
+                    </div>
+                </div>
+
+                <!-- Filter & Riwayat Transaksi -->
+                <div
+                    class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                        <span>Dari:</span>
+                        <input type="date" id="filterStartDate"
+                            class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                        <span>Sampai:</span>
+                        <input type="date" id="filterEndDate"
+                            class="border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                        <button onclick="loadHistoryOrders()"
+                            class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg font-bold">Filter</button>
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold" id="historyCount">0 transaksi ditemukan</span>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm">
+                            <thead
+                                class="bg-slate-100 text-slate-600 text-[11px] uppercase font-extrabold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-3 px-4">Waktu</th>
+                                    <th class="py-3 px-4">No Antrean</th>
+                                    <th class="py-3 px-4">Kasir</th>
+                                    <th class="py-3 px-4">Menu Pesanan</th>
+                                    <th class="py-3 px-4">Catatan</th>
+                                    <th class="py-3 px-4">Total</th>
+                                    <th class="py-3 px-4">Metode</th>
+                                    <th class="py-3 px-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-100">
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- 4. MODAL STRUK CETAK THERMAL KASIR                        -->
+    <!-- ========================================================= -->
+    <div id="receiptModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="relative bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-fade-in flex flex-col max-h-[95vh]">
+            <!-- Header Modal dengan Tombol Silang (X) untuk Batalkan Orderan -->
+            <div class="flex items-center justify-between px-4 py-2.5 bg-slate-100 border-b border-slate-200 shrink-0">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-receipt text-orange-500"></i> Struk Pembayaran
+                </span>
+                <button type="button" onclick="cancelReceiptOrder()"
+                    class="w-7 h-7 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 flex items-center justify-center text-xs font-bold transition shadow-sm"
+                    title="Batalkan Orderan Ini">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div id="printableReceiptArea" class="p-5 text-center bg-white text-slate-900 font-mono text-xs overflow-y-auto flex-1">
+                <div class="text-center mb-2">
+                    <h3 class="font-extrabold text-base tracking-tight" id="receiptCanteenName">KANTIN SEKOLAH</h3>
+                    <p class="text-[10px] text-slate-500" id="receiptCanteenAddress">Struk Pembayaran Sah</p>
+                    <p class="text-[10px] text-slate-400" id="receiptDateTime">18/11/2026 12:00</p>
+                    <p class="text-[10px] text-slate-500" id="receiptCashierName">Kasir: Siti</p>
+                </div>
+
+                <div class="border-t border-b border-dashed border-slate-400 py-3 my-2">
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">NOMOR
+                        ORDERAN</span>
+                    <span id="receiptOrderNumber" class="text-4xl font-black tracking-tight text-slate-900">#001</span>
+                </div>
+
+                <div id="receiptItemsList" class="text-left space-y-1.5 my-3">
+                    <!-- Items -->
+                </div>
+
+                <div id="receiptNotesSection"
+                    class="hidden text-left text-[11px] bg-slate-50 p-2 rounded border border-slate-200 my-2">
+                    <span class="font-bold text-slate-500 block">Catatan:</span>
+                    <span id="receiptNotesText">-</span>
+                </div>
+
+                <div class="border-t border-dashed border-slate-400 pt-2 space-y-1 text-right">
+                    <div class="flex justify-between font-bold text-sm">
+                        <span>TOTAL:</span>
+                        <span id="receiptTotalAmount">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-slate-700 font-bold">
+                        <span>Metode:</span>
+                        <span id="receiptPaymentMethod">TUNAI (LUNAS)</span>
+                    </div>
+                    <div id="receiptCashRow" class="space-y-1">
+                        <div class="flex justify-between text-[11px] text-slate-600">
+                            <span>Bayar:</span>
+                            <span id="receiptPaidAmount">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-600">
+                            <span>Kembali:</span>
+                            <span id="receiptChangeAmount">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-2 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-500">
+                    <p id="receiptFooterText">Terima kasih atas kunjungan Anda!</p>
+                    <p>Simpan struk ini & dengarkan nomor Anda dipanggil.</p>
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 flex items-center gap-2 border-t border-slate-100 shrink-0">
+                <button onclick="window.print()"
+                    class="py-2.5 px-3 bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold rounded-xl text-sm transition flex items-center justify-center gap-1.5"
+                    title="Cetak ke Printer">
+                    <i class="fa-solid fa-print"></i>
+                </button>
+                <button onclick="cancelReceiptOrder()"
+                    class="py-2.5 px-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
+                    title="Batalkan Orderan Ini">
+                    <i class="fa-solid fa-ban"></i>
+                    <span>Batal</span>
+                </button>
+                <button onclick="closeReceiptModal()"
+                    class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs sm:text-sm transition">
+                    Selesai & Pesanan Baru
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 5. MODAL KONFIRMASI HAPUS SEMUA LOG TRANSAKSI             -->
+    <!-- ========================================================= -->
+    <div id="clearLogsModal"
+        class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-slate-100 animate-fade-in">
+            <div
+                class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-black text-lg text-slate-800 text-center">Hapus Semua Log Pencatatan?</h3>
+            <p class="text-xs text-slate-500 text-center mt-1 leading-relaxed">
+                Tindakan ini akan <strong>menghapus permanen</strong> seluruh riwayat transaksi penjualan dan mereset
+                nomor antrean kembali ke <strong>#001</strong>. Data yang sudah dihapus tidak dapat dipulihkan.
+            </p>
+
+            <div class="my-4 pt-2">
+                <label class="block text-xs font-bold text-slate-600 mb-1">Masukkan PIN Admin (Standar: 9999):</label>
+                <input type="password" id="clearLogsPinInput" maxlength="6" placeholder="Ketik PIN Admin..."
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-center font-black tracking-widest text-lg focus:outline-none focus:border-red-500">
+                <p id="clearLogsErrorMsg" class="text-xs font-bold text-red-500 mt-1 text-center h-4"></p>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="button" onclick="closeClearLogsModal()"
+                    class="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+                    Batal
+                </button>
+                <button type="button" onclick="executeClearAllLogs()" id="btnConfirmClearLogs"
+                    class="flex-1 py-2.5 rounded-xl text-xs font-black bg-red-600 hover:bg-red-700 active:scale-95 text-white transition shadow-sm">
+                    Ya, Hapus Semua
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-4 right-4 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl text-sm font-bold transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-slate-700">
+        <i class="fa-solid fa-circle-check text-emerald-400" id="toastIcon"></i>
+        <span id="toastMessage">Pemberitahuan</span>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT & SOCKET.IO ENGINE                             -->
+    <!-- ========================================================= -->
+    <script>
+        // State
+        let currentUser = null; // { role: 'kasir' | 'dapur' | 'admin', name: '...' }
+        let authToken = null;
+        let selectedLoginRole = 'kasir';
+        let currentPin = '';
+        let socket = null;
+        let menus = [];
+        let currentCategory = 'Semua';
+        let cart = [];
+        let currentPaymentMethod = 'Tunai'; // 'Tunai' | 'QRIS' | 'Transfer'
+        let todayOrders = [];
+        let nextQueueFormatted = '001';
+        let activeCallOrder = null;
+        let selectedVoice = null;
+        let appSettings = {};
+        let deferredPrompt = null; // PWA Install
+        let currentReceiptOrder = null; // Struk aktif yang sedang dibuka / bisa dibatalkan
+
+        // PWA Install Event Listener
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choice) => {
+                    if (choice.outcome === 'accepted') {
+                        document.getElementById('pwaInstallBtn').classList.add('hidden');
+                        showToast('Aplikasi berhasil dipasang di tablet!');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('Untuk memasang di Tablet: Ketuk ikon titik tiga di pojok kanan atas browser Chrome, lalu pilih "Tambahkan ke Layar Utama" / "Instal Aplikasi".');
+            }
+        }
+
+        window.onload = function() {
+            updateDateDisplay();
+            initSpeechSynthesis();
+            initSocketConnection();
+            checkExistingSession();
+            registerServiceWorker();
+        };
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+        }
+
+        // --- 1. OTENTIKASI & LOGIN  SISTEM ---
+        function checkExistingSession() {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            if (mode === 'display' || mode === 'tv' || mode === 'pengambilan') {
+                currentUser = { role: 'display', name: 'Layar TV Pengambilan' };
+                hideLoginScreen();
+                switchMode('display');
+                loadInitialAppData();
+                return;
+            }
+
+            const saved = localStorage.getItem('pos_kantin_user');
+            const savedToken = localStorage.getItem('pos_kantin_token');
+            if (saved && savedToken) {
+                try {
+                    currentUser = JSON.parse(saved);
+                    authToken = savedToken;
+                    applyUserPermissions();
+                    hideLoginScreen();
+                    loadInitialAppData();
+                    return;
+                } catch (e) {
+                    localStorage.removeItem('pos_kantin_user');
+                    localStorage.removeItem('pos_kantin_token');
+                }
+            }
+            showLoginScreen();
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            currentPin = '';
+            updatePinDots();
+        }
+
+        function hideLoginScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+        }
+
+        function selectLoginRole(role) {
+            selectedLoginRole = role;
+            document.querySelectorAll('.role-selector-btn').forEach(btn => {
+                btn.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700', 'font-extrabold');
+                btn.classList.add('border-slate-200', 'bg-white', 'text-slate-600', 'font-bold');
+            });
+            const active = document.getElementById('roleBtn-' + role);
+            if (active) {
+                active.classList.add('border-orange-500', 'bg-orange-50', 'text-orange-700', 'font-extrabold');
+                active.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+            }
+            currentPin = '';
+            document.getElementById('loginErrorMessage').innerText = '';
+            updatePinDots();
+        }
+
+        function pressPin(num) {
+            if (currentPin.length < 4) {
+                currentPin += num;
+                updatePinDots();
+                if (currentPin.length === 4) {
+                    submitLogin();
+                }
+            }
+        }
+
+        function backspacePin() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDots();
+                document.getElementById('loginErrorMessage').innerText = '';
+            }
+        }
+
+        function clearPin() {
+            currentPin = '';
+            updatePinDots();
+            document.getElementById('loginErrorMessage').innerText = '';
+        }
+
+        function updatePinDots() {
+            for (let i = 0; i < 4; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < currentPin.length) {
+                    dot.classList.add('bg-orange-500', 'border-orange-500');
+                    dot.classList.remove('bg-transparent', 'border-slate-300');
+                } else {
+                    dot.classList.remove('bg-orange-500', 'border-orange-500');
+                    dot.classList.add('bg-transparent', 'border-slate-300');
+                }
+            }
+        }
+
+        async function submitLogin() {
+            const errEl = document.getElementById('loginErrorMessage');
+            const cardEl = document.getElementById('loginCard');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: selectedLoginRole, pin: currentPin })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'PIN Salah');
+                }
+
+                currentUser = data.user;
+                authToken = data.token;
+                localStorage.setItem('pos_kantin_user', JSON.stringify(currentUser));
+                localStorage.setItem('pos_kantin_token', authToken);
+
+                applyUserPermissions();
+                hideLoginScreen();
+                loadInitialAppData();
+                showToast(`Selamat bekerja, ${currentUser.name}!`);
+            } catch (err) {
+                errEl.innerText = err.message;
+                cardEl.classList.add('shake-anim');
+                setTimeout(() => cardEl.classList.remove('shake-anim'), 500);
+                currentPin = '';
+                updatePinDots();
+            }
+        }
+
+        function handleLogout() {
+            if (!confirm('Apakah Anda yakin ingin keluar / ganti akun?')) return;
+            localStorage.removeItem('pos_kantin_user');
+            localStorage.removeItem('pos_kantin_token');
+            currentUser = null;
+            authToken = null;
+            showLoginScreen();
+        }
+
+        function openTvDisplayDirect() {
+            currentUser = { role: 'display', name: 'Layar TV Pengambilan' };
+            hideLoginScreen();
+            switchMode('display');
+            loadInitialAppData();
+            showToast('Layar TV Pengambilan Aktif');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function applyUserPermissions() {
+            if (!currentUser) return;
+
+            document.getElementById('activeUserName').innerText = currentUser.name;
+            document.getElementById('activeUserRole').innerText = currentUser.role.toUpperCase();
+
+            const btnKasir = document.getElementById('btn-mode-kasir');
+            const btnPanggilan = document.getElementById('btn-mode-panggilan');
+            const btnDisplay = document.getElementById('btn-mode-display');
+            const btnPengaturan = document.getElementById('btn-mode-pengaturan');
+            const btnLaporan = document.getElementById('btn-mode-laporan');
+
+            if (currentUser.role === 'kasir') {
+                btnKasir.classList.remove('hidden');
+                btnPanggilan.classList.add('hidden');
+                btnDisplay.classList.add('hidden');
+                btnPengaturan.classList.add('hidden');
+                btnLaporan.classList.add('hidden');
+                switchMode('kasir');
+            } else if (currentUser.role === 'dapur') {
+                btnKasir.classList.add('hidden');
+                btnPanggilan.classList.remove('hidden');
+                btnDisplay.classList.remove('hidden');
+                btnPengaturan.classList.add('hidden');
+                btnLaporan.classList.add('hidden');
+                switchMode('panggilan');
+            } else if (currentUser.role === 'admin') {
+                btnKasir.classList.remove('hidden');
+                btnPanggilan.classList.remove('hidden');
+                btnDisplay.classList.remove('hidden');
+                btnPengaturan.classList.remove('hidden');
+                btnLaporan.classList.remove('hidden');
+                switchMode('kasir');
+            }
+        }
+
+        function loadInitialAppData() {
+            fetchMenus();
+            fetchTodayOrders();
+            fetchServerInfo();
+            fetchSettings();
+            if (currentUser && currentUser.role === 'admin') {
+                loadUsersPinList();
+            }
+        }
+
+        // --- 2. SINKRONISASI SOCKET.IO REALTIME ---
+        function initSocketConnection() {
+            socket = io();
+
+            socket.on('connect', () => {
+                document.getElementById('connectionBadge').innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Online</span>
+                `;
+            });
+
+            socket.on('disconnect', () => {
+                document.getElementById('connectionBadge').innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                    <span>Terputus</span>
+                `;
+            });
+
+            socket.on('init_data', (data) => {
+                menus = data.menus || [];
+                todayOrders = data.todayOrders || [];
+                nextQueueFormatted = data.nextFormatted || '001';
+                appSettings = data.settings || {};
+                applySettingsToUI();
+                document.getElementById('nextQueueBadge').innerText = '#' + nextQueueFormatted;
+                renderMenuGrid();
+                renderCart();
+                renderQueueList();
+                renderTvDisplay();
+            });
+
+            socket.on('order_created', (newOrder) => {
+                todayOrders.push(newOrder);
+                renderQueueList();
+                renderTvDisplay();
+            });
+
+            socket.on('next_queue_updated', (data) => {
+                nextQueueFormatted = data.formatted;
+                document.getElementById('nextQueueBadge').innerText = '#' + nextQueueFormatted;
+            });
+
+            socket.on('order_status_changed', (updatedOrder) => {
+                const idx = todayOrders.findIndex(o => o.id === updatedOrder.id);
+                if (idx > -1) todayOrders[idx] = updatedOrder;
+                renderQueueList();
+                renderTvDisplay();
+            });
+
+            socket.on('order_called', (payload) => {
+                document.getElementById('callingNumberDisplay').innerText = '#' + payload.queueFormatted;
+                document.getElementById('callingItemsSummary').innerText = payload.itemsSummary;
+                document.getElementById('btnRepeatCall').disabled = false;
+                activeCallOrder = payload;
+
+                speakOrder(payload.queueNumber);
+                showToast(`Memanggil Order #${payload.queueFormatted}`);
+            });
+
+            socket.on('orders_cleared', () => {
+                todayOrders = [];
+                nextQueueFormatted = '001';
+                 document.getElementById('nextQueueBadge').innerText = '#001';
+                renderQueueList();
+                renderTvDisplay();
+                if (currentUser && currentUser.role === 'admin') {
+                    loadSalesSummary();
+                    loadHistoryOrders();
+                }
+                showToast('Semua log pencatatan telah dibersihkan.');
+            });
+
+            socket.on('menu_updated', (newMenuList) => {
+                menus = newMenuList;
+                renderMenuGrid();
+                renderSettingsMenu();
+            });
+
+            socket.on('settings_updated', (newSettings) => {
+                appSettings = newSettings;
+                applySettingsToUI();
+            });
+        }
+
+         // --- 3. AUDIO ENGINE (SUARA PANGGILAN TANPA BEL) ---
+        function initSpeechSynthesis() {
+            if (!('speechSynthesis' in window)) return;
+            const loadVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                selectedVoice = voices.find(v => v.lang.includes('id-ID') || v.lang.includes('id_ID')) || null;
+            };
+            loadVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function speakOrder(queueNumber, forcePlay = false) {
+            // 1. Filter Role: Hanya Tablet Dapur & Layar TV yang boleh bersuara!
+            if (!forcePlay) {
+                if (!currentUser || (currentUser.role !== 'dapur' && currentUser.role !== 'display')) {
+                    return;
+                }
+            }
+
+            // 2. Kunci Anti-Double Antar Tab (Jika buka beberapa tab di komputer yang sama)
+            const now = Date.now();
+            const lastSpoken = parseInt(localStorage.getItem('pos_last_spoken_time') || '0', 10);
+            if (!forcePlay && (now - lastSpoken < 2500)) {
+                return;
+            }
+            localStorage.setItem('pos_last_spoken_time', now.toString());
+
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+
+            const num = parseInt(queueNumber, 10);
+            const text = `Nomor orderan ${num} siap`;
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function testVoice() {
+            speakOrder(1, true);
+            showToast("Memutar suara: Nomor orderan 1 siap");
+        }
+
+        // --- 4. NAVIGASI MODE ---
+        function switchMode(mode) {
+            const panels = {
+                kasir: document.getElementById('panel-kasir'),
+                panggilan: document.getElementById('panel-panggilan'),
+                display: document.getElementById('panel-display'),
+                pengaturan: document.getElementById('panel-pengaturan'),
+                laporan: document.getElementById('panel-laporan')
+            };
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('bg-orange-500', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+
+            const activeBtn = document.getElementById('btn-mode-' + mode);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-orange-500', 'text-white');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            Object.values(panels).forEach(p => p.classList.add('hidden'));
+
+            if (mode === 'kasir') {
+                panels.kasir.classList.remove('hidden');
+            } else if (mode === 'panggilan') {
+                panels.panggilan.classList.remove('hidden');
+            } else if (mode === 'display') {
+                panels.display.classList.remove('hidden');
+                panels.display.classList.add('flex');
+                renderTvDisplay();
+            } else if (mode === 'pengaturan') {
+                panels.pengaturan.classList.remove('hidden');
+                renderSettingsMenu();
+                loadUsersPinList();
+                populateSettingsForm();
+            } else if (mode === 'laporan') {
+                panels.laporan.classList.remove('hidden');
+                initReportDates();
+                loadSalesSummary();
+                loadHistoryOrders();
+            }
+        }
+
+        // --- 5. LOGIKA TABLET 1 (KASIR & PEMBAYARAN) ---
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.innerText.includes(cat)) {
+                    btn.classList.add('bg-orange-500', 'text-white');
+                    btn.classList.remove('bg-white', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-orange-500', 'text-white');
+                    btn.classList.add('bg-white', 'text-slate-600');
+                }
+            });
+            renderMenuGrid();
+        }
+
+        function renderMenuGrid() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+
+            const searchVal = (document.getElementById('searchMenuInput').value || '').toLowerCase().trim();
+
+            let filtered = currentCategory === 'Semua' 
+                ? menus 
+                : menus.filter(m => m.category === currentCategory);
+
+            if (searchVal) {
+                filtered = filtered.filter(m => m.name.toLowerCase().includes(searchVal));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-xs">Menu tidak ditemukan.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isOut = item.is_available === 0;
+                const card = document.createElement('button');
+                card.type = 'button';
+                if (!isOut) {
+                    card.onclick = () => addToCart(item);
+                }
+                card.className = `border rounded-2xl p-3 text-left transition shadow-sm flex flex-col justify-between h-28 sm:h-32 group relative ${isOut ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed' : 'bg-white hover:bg-orange-50 active:scale-95 border-slate-200 hover:border-orange-300'}`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start w-full">
+                        <span class="text-xl sm:text-2xl bg-slate-100 group-hover:bg-white p-2 rounded-xl transition">${item.icon || '🍽️'}</span>
+                        ${isOut 
+                            ? '<span class="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full">HABIS</span>' 
+                            : '<span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition">+</span>'}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-xs sm:text-sm leading-tight line-clamp-1">${escapeHTML(item.name)}</h4>
+                        <p class="text-orange-600 font-extrabold text-xs sm:text-sm mt-0.5">${formatRupiah(item.price)}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function addToCart(item) {
+            const existing = cart.find(c => c.id === item.id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...item, qty: 1, notes: '' });
+            }
+            renderCart();
+        }
+
+        function updateCartQty(id, delta) {
+            const idx = cart.findIndex(c => c.id === id);
+            if (idx > -1) {
+                cart[idx].qty += delta;
+                if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            }
+            renderCart();
+        }
+
+        function editItemNotes(id) {
+            const item = cart.find(c => c.id === id);
+            if (!item) return;
+            const newNotes = prompt(`Catatan khusus untuk "${item.name}" (misal: pedas, bungkus, tanpa es):`, item.notes || '');
+            if (newNotes !== null) {
+                item.notes = newNotes.trim();
+                renderCart();
+            }
+        }
+
+        function clearCart() {
+            cart = [];
+            document.getElementById('cashInput').value = '';
+            document.getElementById('orderNotesInput').value = '';
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const totalEl = document.getElementById('cartTotal');
+            const btnPay = document.getElementById('btnPay');
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
+                        <i class="fa-solid fa-basket-shopping text-3xl mb-2 opacity-30"></i>
+                        <p class="text-xs">Keranjang masih kosong.<br>Ketuk menu di sebelah kiri.</p>
+                    </div>
+                `;
+                totalEl.innerText = 'Rp 0';
+                btnPay.disabled = true;
+                calculateChange();
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = '';
+
+            cart.forEach(item => {
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+                const row = document.createElement('div');
+                row.className = "bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col gap-1";
+                row.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 pr-2">
+                            <h5 class="font-bold text-xs text-slate-800 line-clamp-1">${escapeHTML(item.name)}</h5>
+                            <span class="text-[11px] text-slate-500">${formatRupiah(item.price)}</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-slate-200">
+                            <button type="button" onclick="updateCartQty(${item.id}, -1)" class="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-red-600 font-bold text-xs">-</button>
+                            <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
+                            <button type="button" onclick="updateCartQty(${item.id}, 1)" class="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-emerald-600 font-bold text-xs">+</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[10px]">
+                        <button type="button" onclick="editItemNotes(${item.id})" class="text-slate-500 hover:text-orange-600 font-semibold flex items-center gap-1">
+                            <i class="fa-regular fa-note-sticky"></i>
+                            <span>${item.notes ? escapeHTML(item.notes) : '+ Tambah Catatan'}</span>
+                        </button>
+                        <span class="font-extrabold text-slate-700">${formatRupiah(subtotal)}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            totalEl.innerText = formatRupiah(total);
+            btnPay.disabled = false;
+            calculateChange();
+        }
+
+        function getCartTotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        }
+
+        // --- PILIHAN METODE PEMBAYARAN ---
+        function selectPaymentMethod(method) {
+            currentPaymentMethod = method;
+            document.querySelectorAll('.pay-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-orange-600', 'shadow-sm', 'font-black');
+                btn.classList.add('text-slate-600', 'font-bold');
+            });
+            const activeTab = document.getElementById('payTab-' + method);
+            if (activeTab) {
+                activeTab.classList.add('bg-white', 'text-orange-600', 'shadow-sm', 'font-black');
+                activeTab.classList.remove('text-slate-600');
+            }
+
+            document.getElementById('sectionPay-Tunai').classList.add('hidden');
+            document.getElementById('sectionPay-QRIS').classList.add('hidden');
+            document.getElementById('sectionPay-Transfer').classList.add('hidden');
+
+            document.getElementById('sectionPay-' + method).classList.remove('hidden');
+
+            const btnPayText = document.getElementById('btnPayText');
+            if (method === 'Tunai') {
+                btnPayText.innerText = 'Bayar & Cetak Struk';
+            } else if (method === 'QRIS') {
+                btnPayText.innerText = 'Konfirmasi QRIS & Cetak Struk';
+            } else if (method === 'Transfer') {
+                btnPayText.innerText = 'Konfirmasi Transfer & Cetak Struk';
+            }
+
+            calculateChange();
+        }
+
+        function calculateChange() {
+            const total = getCartTotal();
+            const cashVal = parseInt(document.getElementById('cashInput').value || '0', 10);
+            const changeDisplay = document.getElementById('changeDisplay');
+
+            if (currentPaymentMethod !== 'Tunai') {
+                changeDisplay.innerText = 'Nominal Pas';
+                changeDisplay.className = 'text-slate-500 font-bold';
+                return;
+            }
+
+            if (cashVal >= total && total > 0) {
+                const diff = cashVal - total;
+                changeDisplay.innerText = `Kembali: ${formatRupiah(diff)}`;
+                changeDisplay.className = 'font-bold text-emerald-600 text-xs';
+            } else if (cashVal > 0 && cashVal < total) {
+                const diff = total - cashVal;
+                changeDisplay.innerText = `Kurang: ${formatRupiah(diff)}`;
+                changeDisplay.className = 'font-bold text-red-500 text-xs';
+            } else {
+                changeDisplay.innerText = 'Kembali: Rp 0';
+                changeDisplay.className = 'font-bold text-slate-500 text-xs';
+            }
+        }
+
+        function setExactCash() {
+            document.getElementById('cashInput').value = getCartTotal();
+            calculateChange();
+        }
+
+        function addPresetCash(amount) {
+            const cur = parseInt(document.getElementById('cashInput').value || '0', 10);
+            document.getElementById('cashInput').value = cur + amount;
+            calculateChange();
+        }
+
+        function copyBankNumber() {
+            const num = (appSettings.bank_number || '8830-1234-5678').replace(/[^0-9]/g, '');
+            navigator.clipboard.writeText(num).then(() => {
+                showToast('Nomor rekening disalin!');
+            }).catch(() => {});
+        }
+
+        async function processPayment() {
+            if (cart.length === 0) return;
+            const total = getCartTotal();
+            const cashVal = parseInt(document.getElementById('cashInput').value || '0', 10);
+            const orderNotes = document.getElementById('orderNotesInput').value.trim();
+
+            let paid = total;
+            let change = 0;
+
+            if (currentPaymentMethod === 'Tunai') {
+                if (cashVal > 0 && cashVal < total) {
+                    alert('Uang tunai yang dimasukkan kurang dari total tagihan.');
+                    return;
+                }
+                paid = cashVal >= total ? cashVal : total;
+                change = paid - total;
+            }
+
+            const btnPay = document.getElementById('btnPay');
+            btnPay.disabled = true;
+            btnPay.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart,
+                        totalAmount: total,
+                        paymentMethod: currentPaymentMethod,
+                        amountPaid: paid,
+                        changeDue: change,
+                        cashierName: currentUser ? currentUser.name : 'Kasir',
+                        orderNotes: orderNotes
+                    })
+                });
+
+                if (!res.ok) throw new Error('Gagal memproses pesanan.');
+                const newOrder = await res.json();
+
+                showReceiptModal(newOrder);
+                clearCart();
+                showToast(`Pesanan #${newOrder.queue_formatted} berhasil dibuat!`);
+            } catch (err) {
+                alert('Terjadi kesalahan: ' + err.message);
+            } finally {
+                btnPay.disabled = false;
+                const methodText = currentPaymentMethod === 'Tunai' ? 'Bayar & Cetak Struk' : `Konfirmasi ${currentPaymentMethod} & Cetak Struk`;
+                btnPay.innerHTML = `<i class="fa-solid fa-print"></i> <span>${methodText}</span>`;
+            }
+        }
+
+        function showReceiptModal(order) {
+            currentReceiptOrder = order;
+            document.getElementById('receiptCanteenName').innerText = appSettings.canteen_name || 'KANTIN SEKOLAH';
+            document.getElementById('receiptCanteenAddress').innerText = appSettings.canteen_address || 'Struk Pembayaran Sah';
+            document.getElementById('receiptFooterText').innerText = appSettings.receipt_footer || 'Terima kasih atas kunjungan Anda!';
+
+            document.getElementById('receiptOrderNumber').innerText = '#' + order.queue_formatted;
+            document.getElementById('receiptDateTime').innerText = order.created_at || new Date().toLocaleString('id-ID');
+            document.getElementById('receiptCashierName').innerText = 'Kasir: ' + (order.cashier_name || 'Kasir');
+            document.getElementById('receiptTotalAmount').innerText = formatRupiah(order.total_amount);
+            document.getElementById('receiptPaymentMethod').innerText = `${(order.payment_method || 'TUNAI').toUpperCase()} (LUNAS)`;
+
+            // Catatan
+            const notesSection = document.getElementById('receiptNotesSection');
+            if (order.order_notes) {
+                document.getElementById('receiptNotesText').innerText = order.order_notes;
+                notesSection.classList.remove('hidden');
+            } else {
+                notesSection.classList.add('hidden');
+            }
+
+            // Bagian Cash vs Non-Cash
+            const cashRow = document.getElementById('receiptCashRow');
+            if (order.payment_method === 'Tunai') {
+                document.getElementById('receiptPaidAmount').innerText = formatRupiah(order.amount_paid || order.total_amount);
+                document.getElementById('receiptChangeAmount').innerText = formatRupiah(order.change_due || 0);
+                cashRow.classList.remove('hidden');
+            } else {
+                cashRow.classList.add('hidden');
+            }
+
+            const list = document.getElementById('receiptItemsList');
+            list.innerHTML = order.items.map(i => `
+                <div>
+                    <div class="flex justify-between">
+                        <span>${i.qty}x ${escapeHTML(i.menu_name || i.name)}</span>
+                        <span class="font-bold">${formatRupiah(i.subtotal || (i.price * i.qty))}</span>
+                    </div>
+                    ${i.notes ? `<span class="text-[9px] text-slate-500 italic block pl-3">- ${escapeHTML(i.notes)}</span>` : ''}
+                </div>
+            `).join('');
+
+            const modal = document.getElementById('receiptModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receiptModal').classList.add('hidden');
+            document.getElementById('receiptModal').classList.remove('flex');
+            currentReceiptOrder = null;
+        }
+
+        async function cancelReceiptOrder() {
+            if (!currentReceiptOrder) {
+                closeReceiptModal();
+                return;
+            }
+            const qNum = currentReceiptOrder.queue_formatted || currentReceiptOrder.queue_number;
+            const confirmCancel = confirm(`Apakah Anda yakin ingin MEMBATALKAN pesanan #${qNum}?\n\nPesanan ini akan dibatalkan dan langsung dihapus dari antrean Tablet Dapur & Layar TV.`);
+            if (!confirmCancel) return;
+
+            try {
+                const res = await fetch(`/api/orders/${currentReceiptOrder.id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'cancelled' })
+                });
+
+                if (!res.ok) throw new Error('Gagal membatalkan pesanan.');
+
+                // Update lokal state
+                const idx = todayOrders.findIndex(o => o.id === currentReceiptOrder.id);
+                if (idx > -1) {
+                    todayOrders[idx].status = 'cancelled';
+                }
+                renderQueueList();
+                renderTvDisplay();
+                closeReceiptModal();
+                showToast(`Pesanan #${qNum} berhasil dibatalkan.`);
+            } catch (err) {
+                alert('Terjadi kesalahan: ' + err.message);
+            }
+        }
+
+        async function reprintLastReceipt() {
+            try {
+                const res = await fetch('/api/orders/last');
+                const last = await res.json();
+                if (!last) {
+                    showToast('Belum ada transaksi sebelumnya.');
+                    return;
+                }
+                showReceiptModal(last);
+            } catch (e) {
+                alert('Gagal mengambil struk terakhir: ' + e.message);
+            }
+        }
+
+        // --- 6. LOGIKA TABLET 2 (DAPUR & PANGGILAN) ---
+        function renderQueueList() {
+            const container = document.getElementById('queueList');
+            const activeOrders = todayOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
+
+            if (activeOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 text-center border border-slate-200 text-slate-400">
+                        <i class="fa-solid fa-mug-hot text-4xl mb-3 opacity-30"></i>
+                        <p class="font-bold text-slate-600">Semua pesanan telah selesai</p>
+                        <p class="text-xs mt-1">Pesanan masuk dari kasir akan muncul seketika di sini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            activeOrders.forEach(order => {
+                const isReady = order.status === 'ready';
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-2xl p-3.5 sm:p-4 border-2 transition shadow-sm ${isReady ? 'border-orange-500 calling-active' : 'border-slate-200'}`;
+                
+                const itemsHtml = order.items.map(i => `
+                    <span class="inline-block bg-slate-100 text-slate-800 text-xs px-2.5 py-1 rounded-lg font-bold mr-1.5 mb-1">
+                        ${i.qty}x ${escapeHTML(i.menu_name || i.name)}
+                        ${i.notes ? `<em class="text-orange-600 font-normal">(${escapeHTML(i.notes)})</em>` : ''}
+                    </span>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-14 h-14 rounded-2xl ${isReady ? 'bg-orange-500 text-white' : 'bg-slate-800 text-white'} flex flex-col items-center justify-center shrink-0 shadow-sm">
+                                <span class="text-[9px] uppercase tracking-wider opacity-80 leading-none">Antrean</span>
+                                <span class="text-xl font-black leading-tight">#${order.queue_formatted}</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-slate-400"><i class="fa-regular fa-clock"></i> ${order.created_at ? order.created_at.split(' ')[1] || '' : ''}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${order.payment_method || 'Tunai'}</span>
+                                    ${isReady 
+                                        ? '<span class="text-[10px] font-black bg-orange-100 text-orange-700 px-2.5 py-0.5 rounded-full border border-orange-200">SIAP DIAMBIL</span>' 
+                                        : '<span class="text-[10px] font-black bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full border border-amber-200">SEDANG DISIAPKAN</span>'}
+                                </div>
+                                <div class="mt-2">${itemsHtml}</div>
+                                ${order.order_notes ? `<p class="text-xs text-orange-700 font-semibold bg-orange-50 px-2.5 py-1 rounded-lg mt-1"><i class="fa-solid fa-comment-dots mr-1"></i> ${escapeHTML(order.order_notes)}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <button onclick="triggerCallOrder(${order.id})" class="flex-1 sm:flex-none bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span>${isReady ? 'Panggil Lagi' : 'Panggil Orderan'}</span>
+                        </button>
+                        <button onclick="triggerCompleteOrder(${order.id})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Selesai</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function triggerCallOrder(orderId) {
+            try {
+                await fetch(`/api/orders/${orderId}/call`, { method: 'POST' });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function repeatCall() {
+            if (activeCallOrder) {
+                triggerCallOrder(activeCallOrder.orderId || activeCallOrder.id);
+            }
+        }
+
+        async function triggerCompleteOrder(orderId) {
+            try {
+                await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'completed' })
+                });
+                if (activeCallOrder && (activeCallOrder.orderId === orderId || activeCallOrder.id === orderId)) {
+                    document.getElementById('callingNumberDisplay').innerText = '-';
+                    document.getElementById('callingItemsSummary').innerText = 'Pesanan telah diambil';
+                    document.getElementById('btnRepeatCall').disabled = true;
+                    activeCallOrder = null;
+                }
+                showToast('Pesanan selesai.');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- 7. LAYAR TV DISPLAY MURID ---
+        function renderTvDisplay() {
+            const preparingGrid = document.getElementById('tvPreparingGrid');
+            const readyGrid = document.getElementById('tvReadyGrid');
+            if (!preparingGrid || !readyGrid) return;
+
+            const preparingOrders = todayOrders.filter(o => o.status === 'preparing');
+            const readyOrders = todayOrders.filter(o => o.status === 'ready');
+
+            document.getElementById('tvPreparingCount').innerText = `${preparingOrders.length} Antrean`;
+            document.getElementById('tvReadyCount').innerText = `${readyOrders.length} Siap`;
+
+            if (preparingOrders.length === 0) {
+                preparingGrid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500 text-sm">Tidak ada pesanan antre</div>';
+            } else {
+                preparingGrid.innerHTML = preparingOrders.map(o => `
+                    <div class="bg-slate-700/60 border border-slate-600 rounded-2xl p-4 text-center">
+                        <span class="text-3xl font-black text-amber-400">#${o.queue_formatted}</span>
+                    </div>
+                `).join('');
+            }
+
+            if (readyOrders.length === 0) {
+                readyGrid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500 text-sm">Belum ada pesanan siap</div>';
+            } else {
+                readyGrid.innerHTML = readyOrders.map(o => `
+                    <div class="bg-emerald-500/20 border-2 border-emerald-400 rounded-2xl p-4 text-center calling-active">
+                        <span class="text-4xl font-black text-white">#${o.queue_formatted}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // --- 8. MANAJEMEN MENU & PENGATURAN TOKO ---
+        function applySettingsToUI() {
+            if (appSettings.canteen_name) {
+                document.getElementById('headerBrandName').innerText = appSettings.canteen_name;
+                document.getElementById('loginCanteenTitle').innerText = appSettings.canteen_name;
+            }
+            const qrisImg = document.getElementById('qrisImageDisplay');
+            if (qrisImg && appSettings.qris_image) {
+                qrisImg.src = appSettings.qris_image;
+            }
+            if (appSettings.bank_name) {
+                document.getElementById('bankNameDisplay').innerText = appSettings.bank_name;
+            }
+            if (appSettings.bank_number) {
+                document.getElementById('bankNumberDisplay').innerText = appSettings.bank_number;
+            }
+            if (appSettings.bank_holder) {
+                document.getElementById('bankHolderDisplay').innerText = 'a.n ' + appSettings.bank_holder;
+            }
+        }
+
+        function populateSettingsForm() {
+            document.getElementById('settingCanteenName').value = appSettings.canteen_name || '';
+            document.getElementById('settingCanteenAddress').value = appSettings.canteen_address || '';
+            document.getElementById('settingBankName').value = appSettings.bank_name || '';
+            document.getElementById('settingBankNumber').value = appSettings.bank_number || '';
+             document.getElementById('settingBankHolder').value = appSettings.bank_holder || '';
+            document.getElementById('settingQrisImage').value = appSettings.qris_image || '';
+        }
+
+        async function handleSaveSettings(e) {
+            e.preventDefault();
+            const payload = {
+                canteen_name: document.getElementById('settingCanteenName').value.trim(),
+                canteen_address: document.getElementById('settingCanteenAddress').value.trim(),
+                bank_name: document.getElementById('settingBankName').value.trim(),
+                bank_number: document.getElementById('settingBankNumber').value.trim(),
+                bank_holder: document.getElementById('settingBankHolder').value.trim(),
+                qris_image: document.getElementById('settingQrisImage').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Gagal menyimpan pengaturan toko');
+                showToast('Pengaturan toko berhasil diperbarui!');
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function handleQrisFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('settingQrisImage').value = evt.target.result;
+                showToast('Gambar QRIS siap disimpan.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function loadUsersPinList() {
+            const container = document.getElementById('usersPinList');
+            if (!container) return;
+            try {
+                const res = await fetch('/api/auth/users', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const users = await res.json();
+                container.innerHTML = users.map(u => `
+                    <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">${u.role}</span>
+                            <h4 class="font-extrabold text-slate-800 text-sm">${escapeHTML(u.name)}</h4>
+                            <p class="text-xs text-slate-500 mt-1">PIN Saat Ini: <strong class="text-orange-600">${u.pin}</strong></p>
+                        </div>
+                        <button onclick="promptChangePin('${u.role}', '${u.name}')" class="mt-3 bg-white border border-slate-300 hover:border-orange-500 text-slate-700 hover:text-orange-600 py-1.5 px-3 rounded-lg text-xs font-bold transition">
+                            Ubah PIN
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function promptChangePin(role, name) {
+            const newPin = prompt(`Masukkan PIN baru untuk ${name} (minimal 4 digit angka):`);
+            if (!newPin || newPin.trim().length < 4) {
+                if (newPin !== null) alert('PIN harus berupa minimal 4 digit angka.');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/auth/users/${role}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ pin: newPin.trim() })
+                });
+                if (!res.ok) throw new Error('Gagal memperbarui PIN.');
+                showToast(`PIN ${name} berhasil diubah!`);
+                loadUsersPinList();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function renderSettingsMenu() {
+            const list = document.getElementById('settingsMenuList');
+            list.innerHTML = '';
+
+            if (menus.length === 0) {
+                list.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs">Belum ada menu di database.</div>';
+                return;
+            }
+
+            menus.forEach(item => {
+                const isAvail = item.is_available !== 0;
+                const row = document.createElement('div');
+                row.className = "px-5 py-3.5 flex items-center justify-between hover:bg-slate-50";
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl bg-slate-100 p-2 rounded-xl">${item.icon || '🍽️'}</span>
+                        <div>
+                            <h4 class="font-extrabold text-slate-800 text-sm">${escapeHTML(item.name)}</h4>
+                            <p class="text-xs font-bold text-orange-600">${formatRupiah(item.price)} <span class="text-slate-400 font-normal">• ${item.category || 'Makanan'}</span></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="toggleStock(${item.id}, ${!isAvail})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${isAvail ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
+                            <i class="fa-solid ${isAvail ? 'fa-check' : 'fa-ban'}"></i>
+                            <span>${isAvail ? 'Tersedia' : 'Habis'}</span>
+                        </button>
+                        <button type="button" onclick="handleDeleteMenu(${item.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        async function toggleStock(id, newStatus) {
+            try {
+                await fetch(`/api/menus/${id}/availability`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ isAvailable: newStatus })
+                });
+                showToast('Status stok menu diperbarui!');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function handleSaveMenu(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputMenuName').value.trim();
+            const price = parseInt(document.getElementById('inputMenuPrice').value, 10);
+            const category = document.getElementById('inputMenuCat').value;
+            const icon = document.getElementById('inputMenuIcon').value;
+
+            try {
+                const res = await fetch('/api/menus', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ name, price, category, icon })
+                });
+                if (!res.ok) throw new Error('Gagal menyimpan menu');
+
+                document.getElementById('inputMenuName').value = '';
+                document.getElementById('inputMenuPrice').value = '';
+                showToast(`Menu "${name}" berhasil ditambahkan!`);
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function handleDeleteMenu(id) {
+            if (!confirm('Yakin ingin menghapus menu ini dari database?')) return;
+            try {
+                const res = await fetch(`/api/menus/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                if (!res.ok) throw new Error('Gagal menghapus menu');
+                showToast('Menu dihapus.');
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        // --- 9. LAPORAN & EKSPOR EXCEL ---
+        function initReportDates() {
+            const startInput = document.getElementById('filterStartDate');
+            const endInput = document.getElementById('filterEndDate');
+            if (startInput && endInput && !startInput.value) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                startInput.value = `${yyyy}-${mm}-01`;
+                endInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+        }
+
+        async function loadSalesSummary() {
+            try {
+                const res = await fetch('/api/reports/summary');
+                const data = await res.json();
+                document.getElementById('repTodayRevenue').innerText = formatRupiah(data.today.total_revenue || 0);
+                document.getElementById('repTodayTx').innerText = `${data.today.total_transactions || 0} Transaksi`;
+                document.getElementById('repMonthRevenue').innerText = formatRupiah(data.month.total_revenue || 0);
+                document.getElementById('repMonthTx').innerText = `${data.month.total_transactions || 0} Transaksi`;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadHistoryOrders() {
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            try {
+                const res = await fetch(`/api/orders/history?startDate=${start}&endDate=${end}`);
+                const orders = await res.json();
+                const tbody = document.getElementById('historyTableBody');
+                document.getElementById('historyCount').innerText = `${orders.length} transaksi`;
+
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400 text-xs">Tidak ada riwayat transaksi pada rentang tanggal ini.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = orders.map(o => {
+                    const itemsStr = o.items.map(i => `${i.qty}x ${i.menu_name}`).join(', ');
+                    return `
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-3 px-4 font-mono text-xs text-slate-500">${o.created_at || o.order_date}</td>
+                            <td class="py-3 px-4 font-black text-slate-900">#${o.queue_formatted}</td>
+                            <td class="py-3 px-4 text-slate-600 text-xs">${escapeHTML(o.cashier_name || 'Kasir')}</td>
+                            <td class="py-3 px-4 text-slate-700 text-xs font-semibold">${escapeHTML(itemsStr)}</td>
+                            <td class="py-3 px-4 text-slate-500 text-xs italic">${escapeHTML(o.order_notes || '-')}</td>
+                            <td class="py-3 px-4 font-black text-orange-600">${formatRupiah(o.total_amount)}</td>
+                            <td class="py-3 px-4 font-bold text-slate-600 text-xs">${o.payment_method || 'Tunai'}</td>
+                            <td class="py-3 px-4">
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${o.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}">${o.status}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function downloadExcelReport() {
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            window.location.href = `/api/reports/export-excel?startDate=${start}&endDate=${end}`;
+            showToast('Mengunduh berkas laporan Excel (.xlsx)...');
+        }
+
+        // --- HAPUS / CLEAR SEMUA LOG PENCATATAN ---
+        function openClearLogsModal() {
+            document.getElementById('clearLogsPinInput').value = '';
+            document.getElementById('clearLogsErrorMsg').innerText = '';
+            document.getElementById('clearLogsModal').classList.remove('hidden');
+            document.getElementById('clearLogsModal').classList.add('flex');
+            document.getElementById('clearLogsPinInput').focus();
+        }
+
+        function closeClearLogsModal() {
+            document.getElementById('clearLogsModal').classList.add('hidden');
+            document.getElementById('clearLogsModal').classList.remove('flex');
+        }
+
+        async function executeClearAllLogs() {
+            const pin = document.getElementById('clearLogsPinInput').value.trim();
+            const errEl = document.getElementById('clearLogsErrorMsg');
+            const btn = document.getElementById('btnConfirmClearLogs');
+
+            if (!pin) {
+                errEl.innerText = 'PIN Admin wajib diisi!';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Menghapus...';
+
+            try {
+                const res = await fetch('/api/orders/clear-all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Gagal menghapus log pencatatan');
+                }
+
+                closeClearLogsModal();
+                showToast('Semua log pencatatan berhasil dibersihkan!');
+
+                todayOrders = [];
+                nextQueueFormatted = '001';
+                document.getElementById('nextQueueBadge').innerText = '#001';
+                renderQueueList();
+                renderTvDisplay();
+                loadSalesSummary();
+                loadHistoryOrders();
+            } catch (err) {
+                errEl.innerText = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Ya, Hapus Semua';
+            }
+        }
+
+        // --- FETCHERS & UTILITIES ---
+        async function fetchServerInfo() {
+            try {
+                const res = await fetch('/api/info');
+                const data = await res.json();
+                document.getElementById('nextQueueBadge').innerText = '#' + String(data.nextQueue).padStart(3, '0');
+            } catch (err) {}
+        }
+
+        async function fetchSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                appSettings = await res.json();
+                applySettingsToUI();
+            } catch (err) {}
+        }
+
+        async function fetchMenus() {
+            try {
+                const res = await fetch('/api/menus');
+                menus = await res.json();
+                renderMenuGrid();
+                renderSettingsMenu();
+            } catch (err) {}
+        }
+
+        async function fetchTodayOrders() {
+            try {
+                const res = await fetch('/api/orders/today');
+                todayOrders = await res.json();
+                renderQueueList();
+                renderTvDisplay();
+            } catch (err) {}
+        }
+
+        function updateDateDisplay() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date().toLocaleDateString('id-ID', options);
+            document.getElementById('currentDateDisplay').innerText = today + " • POS Siap Pakai";
+        }
+
+        function formatRupiah(num) {
+            return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
