@@ -1,12 +1,12 @@
 {
-  "name": "KantinPintar POS",
-  "short_name": "Kantin POS",
-  "description": "Sistem Kasir & Panggilan Antrean Dapur Realtime",
+  "name": "Kantin Kita POS",
+  "short_name": "Kantin Kita",
+  "description": "Sistem Kasir & Panggilan Antrean Realtime - Sajian Lezat & Hangat",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#0f172a",
-  "theme_color": "#f97316",
+  "theme_color": "#ea580c",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -22,4 +22,3 @@
     }
   ]
 }
-
