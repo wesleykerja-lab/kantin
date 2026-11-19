@@ -87,7 +87,36 @@ function authenticate(requiredRoles = []) {
 
 app.use(cors());
 app.use(express.json({ limit: '5mb' })); // Support base64 image upload QRIS
+
+// Helper cari file statis yang paling baru antara public/ dan root/ (agar aman di mana pun user upload di GitHub)
+function getLatestFile(fileName) {
+  const rootPath = path.join(__dirname, fileName);
+  const pubPath = path.join(__dirname, 'public', fileName);
+  try {
+    const rootExists = fs.existsSync(rootPath);
+    const pubExists = fs.existsSync(pubPath);
+    if (rootExists && pubExists) {
+      const rootStat = fs.statSync(rootPath);
+      const pubStat = fs.statSync(pubPath);
+      return rootStat.mtimeMs >= pubStat.mtimeMs ? rootPath : pubPath;
+    }
+    if (rootExists) return rootPath;
+    if (pubExists) return pubPath;
+  } catch (e) {}
+  return pubPath;
+}
+
+app.get(['/', '/index.html'], (req, res) => {
+  res.sendFile(getLatestFile('index.html'));
+});
+
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(getLatestFile('sw.js'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // Shortcut URL langsung untuk Layar TV Pengambilan (Bebas Login)
 app.get('/tv', (req, res) => res.redirect('/?mode=display'));
