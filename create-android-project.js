@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 Menyiapkan file proyek Android native Kantin Kita...');
+console.log('🚀 Menyiapkan file proyek Android native Kantin Kita (Zero Dependency, Ultra Fast)...');
 
 // Buat direktori yang dibutuhkan
 const dirs = [
@@ -82,9 +82,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.webkit:webkit:1.10.0'
+    // Zero dependencies needed! Android framework provides native WebView.
 }
 `);
 
@@ -102,7 +100,7 @@ fs.writeFileSync('android/app/src/main/AndroidManifest.xml', `<?xml version="1.0
         android:label="Kantin Kita"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.KantinKita"
+        android:theme="@android:style/Theme.Light.NoTitleBar.Fullscreen"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
@@ -122,8 +120,7 @@ fs.writeFileSync('android/app/src/main/AndroidManifest.xml', `<?xml version="1.0
 // 5. styles.xml
 fs.writeFileSync('android/app/src/main/res/values/styles.xml', `<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.KantinKita" parent="android:Theme.NoTitleBar.Fullscreen">
-        <item name="android:windowBackground">#0f172a</item>
+    <style name="Theme.KantinKita" parent="@android:style/Theme.Light.NoTitleBar.Fullscreen">
     </style>
 </resources>
 `);
@@ -197,4 +194,3 @@ if (fs.existsSync(logoSrc)) {
 }
 
 console.log('✅ Semua file proyek Android berhasil dibuat!');
-
