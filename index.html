@@ -701,12 +701,18 @@
 
                         <!-- 2. Bagian QRIS (Mesin EDC) -->
                         <div id="sectionPay-QRIS"
-                            class="hidden bg-orange-50/80 p-2.5 rounded-xl border border-orange-200 text-center space-y-1">
-                            <div class="flex items-center justify-center gap-1.5 text-orange-600 font-bold text-xs">
-                                <i class="fa-solid fa-credit-card"></i>
-                                <span>Pembayaran QRIS via Mesin EDC</span>
+                            class="hidden bg-orange-50/80 p-2 rounded-xl border border-orange-200 text-center space-y-1">
+                            <div id="qrisImageWrapper" class="hidden flex flex-col items-center">
+                                <img id="qrisImageDisplay" src="" alt="Kode QRIS" class="w-28 h-28 object-contain mx-auto rounded-lg shadow-sm border border-slate-200 bg-white p-1">
+                                <p class="text-[10px] text-slate-600 mt-0.5 font-bold">Scan kode QRIS di atas untuk membayar</p>
                             </div>
-                            <p class="text-[11px] text-slate-600 leading-tight">Proses pembayaran QRIS langsung di mesin EDC Anda. Setelah keluar struk EDC / sukses, ketuk tombol konfirmasi di bawah untuk mencetak nomor antrean.</p>
+                            <div id="qrisEdcNotice" class="space-y-0.5">
+                                <div class="flex items-center justify-center gap-1.5 text-orange-600 font-bold text-xs">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                    <span>Pembayaran QRIS via EDC</span>
+                                </div>
+                                <p class="text-[10px] text-slate-600 leading-tight">Proses pembayaran QRIS di mesin EDC / scan barcode, lalu ketuk tombol Bayar.</p>
+                            </div>
                         </div>
 
                         <!-- 3. Bagian Transfer Bank -->
@@ -1115,19 +1121,6 @@
 
                 <!-- ——————————— TAB 5: KELOLA MENU ——————————— -->
                 <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
-
-                <!-- 2. Kelola PIN Akun Kasir / Dapur / Admin -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-shield-halved text-orange-500"></i> Pengaturan PIN Akses Perangkat
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="usersPinList">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
-
-                <!-- ——————————— TAB 5: KELOLA MENU ——————————— -->
-                <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
                     <!-- 3. Form Tambah Menu Baru -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-extrabold text-slate-700 mb-4 flex items-center gap-2 text-sm">
@@ -1156,14 +1149,15 @@
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-bold text-slate-500 mb-1">Ikon</label>
                             <select id="inputMenuIcon"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
-                                <option value="°>° Nasi</option>
-                                <option value="°">° Pasta</option>
-                                <option value="°—">°— Ayam</option>
-                                <option value="°">° Mie / Bakso</option>
-                                <option value="°ª">°ª Roti / Snack</option>
-                                <option value="°¤">°¤ Minuman</option>
-                                <option value=""> Kopi / Teh</option>
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
+                                <option value="🍚">🍚 Nasi</option>
+                                <option value="🍝">🍝 Pasta</option>
+                                <option value="🍗">🍗 Ayam</option>
+                                <option value="🍜">🍜 Mie / Bakso</option>
+                                <option value="🥪">🥪 Roti / Snack</option>
+                                <option value="🥤">🥤 Minuman</option>
+                                <option value="☕">☕ Kopi / Teh</option>
+                                <option value="🍽️">🍽️ Lainnya</option>
                             </select>
                         </div>
                         <div class="sm:col-span-12 flex justify-end mt-1">
@@ -2462,8 +2456,15 @@
                 document.getElementById('loginCanteenTitle').innerText = appSettings.canteen_name;
             }
             const qrisImg = document.getElementById('qrisImageDisplay');
-            if (qrisImg && appSettings.qris_image) {
-                qrisImg.src = appSettings.qris_image;
+            const qrisWrapper = document.getElementById('qrisImageWrapper');
+            const qrisEdcNotice = document.getElementById('qrisEdcNotice');
+            if (appSettings.qris_image) {
+                if (qrisImg) qrisImg.src = appSettings.qris_image;
+                if (qrisWrapper) qrisWrapper.classList.remove('hidden');
+                if (qrisEdcNotice) qrisEdcNotice.classList.add('hidden');
+            } else {
+                if (qrisWrapper) qrisWrapper.classList.add('hidden');
+                if (qrisEdcNotice) qrisEdcNotice.classList.remove('hidden');
             }
             if (appSettings.bank_name) {
                 document.getElementById('bankNameDisplay').innerText = appSettings.bank_name;
@@ -2676,6 +2677,76 @@
             }
         }
 
+        
+        // --- EDIT MENU MAKANAN / MINUMAN ---
+        function openEditMenuModal(id) {
+            const item = menus.find(m => m.id === id);
+            if (!item) return;
+
+            document.getElementById('editMenuId').value = item.id;
+            document.getElementById('editMenuName').value = item.name || '';
+            document.getElementById('editMenuPrice').value = item.price || 0;
+            document.getElementById('editMenuCat').value = item.category || 'Makanan';
+            document.getElementById('editMenuIcon').value = item.icon || '🍽️';
+
+            const modal = document.getElementById('editMenuModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeEditMenuModal() {
+            const modal = document.getElementById('editMenuModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        async function handleUpdateMenu(e) {
+            e.preventDefault();
+            const id = document.getElementById('editMenuId').value;
+            const name = document.getElementById('editMenuName').value.trim();
+            const price = parseInt(document.getElementById('editMenuPrice').value, 10);
+            const category = document.getElementById('editMenuCat').value;
+            const icon = document.getElementById('editMenuIcon').value;
+
+            if (!name || isNaN(price)) {
+                alert('Nama dan harga menu wajib diisi dengan benar!');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitEditMenu');
+            btn.disabled = true;
+            btn.innerText = 'Menyimpan...';
+
+            try {
+                const res = await fetch(`/api/menus/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ name, price, category, icon })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || 'Gagal mengubah menu');
+                }
+
+                closeEditMenuModal();
+                showToast(`Menu "${name}" berhasil diperbarui!`);
+                fetchMenus();
+            } catch (err) {
+                alert('Gagal mengedit menu: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Simpan Perubahan';
+            }
+        }
+
         function renderSettingsMenu() {
             const list = document.getElementById('settingsMenuList');
             list.innerHTML = '';
@@ -2691,18 +2762,22 @@
                 row.className = "px-5 py-3.5 flex items-center justify-between hover:bg-slate-50";
                 row.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <span class="text-2xl bg-slate-100 p-2 rounded-xl">${item.icon || '°½¯¸'}</span>
+                        <span class="text-2xl bg-slate-100 p-2 rounded-xl">${item.icon || '🍽️'}</span>
                         <div>
                             <h4 class="font-extrabold text-slate-800 text-sm">${escapeHTML(item.name)}</h4>
                             <p class="text-xs font-bold text-orange-600">${formatRupiah(item.price)} <span class="text-slate-400 font-normal">• ${item.category || 'Makanan'}</span></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button type="button" onclick="openEditMenuModal(${item.id})" class="text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 border border-orange-200" title="Edit Nama, Harga, atau Kategori">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Edit</span>
+                        </button>
                         <button type="button" onclick="toggleStock(${item.id}, ${!isAvail})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${isAvail ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
                             <i class="fa-solid ${isAvail ? 'fa-check' : 'fa-ban'}"></i>
                             <span>${isAvail ? 'Tersedia' : 'Habis'}</span>
                         </button>
-                        <button type="button" onclick="handleDeleteMenu(${item.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-xs font-bold transition">
+                        <button type="button" onclick="handleDeleteMenu(${item.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-xs font-bold transition" title="Hapus Menu">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
@@ -2955,6 +3030,60 @@
             }, 3000);
         }
     </script>
+
+    <!-- Modal Edit Menu Makanan / Minuman -->
+    <div id="editMenuModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 animate-scale-in">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-orange-500"></i>
+                    <span>Edit Menu Makanan / Minuman</span>
+                </h3>
+                <button type="button" onclick="closeEditMenuModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleUpdateMenu(event)" class="space-y-3">
+                <input type="hidden" id="editMenuId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Menu</label>
+                    <input type="text" id="editMenuName" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Harga (Rp)</label>
+                        <input type="number" id="editMenuPrice" required min="500" step="500" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Kategori</label>
+                        <select id="editMenuCat" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
+                            <option value="Makanan">Makanan</option>
+                            <option value="Snack">Snack</option>
+                            <option value="Minuman">Minuman</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Ikon Emoji</label>
+                    <select id="editMenuIcon" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
+                        <option value="🍚">🍚 Nasi</option>
+                        <option value="🍝">🍝 Pasta</option>
+                        <option value="🍗">🍗 Ayam</option>
+                        <option value="🍜">🍜 Mie / Bakso</option>
+                        <option value="🥪">🥪 Roti / Snack</option>
+                        <option value="🥤">🥤 Minuman</option>
+                        <option value="☕">☕ Kopi / Teh</option>
+                        <option value="🍽️">🍽️ Lainnya</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeEditMenuModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Batal</button>
+                    <button type="submit" id="btnSubmitEditMenu" class="px-5 py-2 rounded-xl text-xs font-black bg-orange-500 hover:bg-orange-600 text-white shadow-sm">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 
 </html>
