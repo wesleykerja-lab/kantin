@@ -107,14 +107,14 @@ async function initDb() {
     const sCount = await client.execute('SELECT COUNT(*) as c FROM settings');
     if (Number(sCount.rows[0].c) === 0) {
       const defaults = {
-        canteen_name: 'KANTIN SEKOLAH',
-        canteen_address: 'Area Kantin Utama',
+        canteen_name: 'KANTIN KITA',
+        canteen_address: 'Sajian Lezat & Hangat • Rasa Rumah, Harga Ramah',
         canteen_phone: '0812-3456-7890',
-        qris_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=KANTIN-PINTAR-POS',
+        qris_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=KANTIN-KITA-POS',
         bank_name: 'BCA',
         bank_number: '8830-1234-5678',
-        bank_holder: 'Kantin Sekolah Pintar',
-        receipt_footer: 'Terima kasih atas kunjungan Anda!'
+        bank_holder: 'Kantin Kita',
+        receipt_footer: 'Terima kasih telah berbelanja di Kantin Kita!'
       };
       for (const [k, v] of Object.entries(defaults)) {
         await client.execute({ sql: 'INSERT INTO settings (key, value) VALUES (?, ?)', args: [k, v] });

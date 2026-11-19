@@ -425,7 +425,7 @@ app.get('/api/reports/export-excel', async (req, res) => {
     const orders = await db.getHistoryOrders(startDate, endDate);
 
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'KantinPintar POS';
+    workbook.creator = 'Kantin Kita POS';
     workbook.created = new Date();
 
     const worksheet = workbook.addWorksheet('Laporan Penjualan', {
