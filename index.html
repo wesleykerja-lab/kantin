@@ -663,9 +663,8 @@
             <div class="max-w-4xl mx-auto space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800">Pengaturan Menu & Pembayaran</h2>
-                        <p class="text-xs sm:text-sm text-slate-500">Kelola menu, ketersediaan stok, info QRIS, rekening
-                            bank, serta PIN tablet.</p>
+                        <h2 class="text-2xl font-black text-slate-800">⚙️ Pengaturan Sistem</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Kelola profil perusahaan, layout struk, menu, PIN tablet, & lebih.</p>
                     </div>
                     <button onclick="switchMode('kasir')"
                         class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold self-start">
@@ -673,59 +672,240 @@
                     </button>
                 </div>
 
-                <!-- 1. Pengaturan Identitas Kantin & Rekening Pembayaran -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-store text-orange-500"></i> Identitas Kantin & Akun Pembayaran (QRIS /
-                        Bank)
-                    </h3>
-                    <form onsubmit="handleSaveSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Nama Kantin (Header Struk):</label>
-                            <input type="text" id="settingCanteenName"
-                                class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Alamat / Lokasi:</label>
-                            <input type="text" id="settingCanteenAddress"
-                                class="w-full px-3 py-2 rounded-xl border border-slate-300">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Nama Bank Transfer:</label>
-                            <input type="text" id="settingBankName" placeholder="BCA / Mandiri / BRI"
-                                class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
-                        </div>
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Nomor Rekening & a.n:</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="settingBankNumber" placeholder="No Rekening"
-                                    class="w-1/2 px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold">
-                                <input type="text" id="settingBankHolder" placeholder="Atas Nama"
-                                    class="w-1/2 px-3 py-2 rounded-xl border border-slate-300">
+                <!-- TAB NAVIGASI PENGATURAN -->
+                <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button onclick="switchSettingsTab('profil')" id="stab-profil"
+                        class="settings-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white shadow-sm">
+                        <i class="fa-solid fa-building mr-1"></i> Profil Perusahaan
+                    </button>
+                    <button onclick="switchSettingsTab('struk')" id="stab-struk"
+                        class="settings-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                        <i class="fa-solid fa-receipt mr-1"></i> Layout Struk
+                    </button>
+                    <button onclick="switchSettingsTab('pembayaran')" id="stab-pembayaran"
+                        class="settings-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                        <i class="fa-solid fa-wallet mr-1"></i> Pembayaran
+                    </button>
+                    <button onclick="switchSettingsTab('pin')" id="stab-pin"
+                        class="settings-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> PIN Akses
+                    </button>
+                    <button onclick="switchSettingsTab('menu')" id="stab-menu"
+                        class="settings-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+                        <i class="fa-solid fa-utensils mr-1"></i> Kelola Menu
+                    </button>
+                </div>
+
+                <!-- ═══════════ TAB 1: PROFIL PERUSAHAAN ═══════════ -->
+                <div id="stab-content-profil" class="settings-tab-content space-y-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="font-extrabold text-slate-800 mb-1 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-building text-orange-500"></i> Data Profil Perusahaan / Kantin
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">Informasi ini tampil di header aplikasi, login, layar TV, dan struk cetak.</p>
+                        <form onsubmit="handleSaveSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="sm:col-span-2 flex flex-col sm:flex-row gap-4 items-start">
+                                <div class="shrink-0 text-center">
+                                    <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-orange-200 bg-slate-50 mx-auto mb-2">
+                                        <img id="previewLogo" src="/logo.png" alt="Logo" class="w-full h-full object-contain">
+                                    </div>
+                                    <label class="text-[11px] font-bold text-orange-600 cursor-pointer hover:underline">
+                                        <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="hidden">
+                                        <i class="fa-solid fa-upload mr-1"></i>Ganti Logo
+                                    </label>
+                                </div>
+                                <div class="flex-1 grid grid-cols-1 gap-3 w-full">
+                                    <div>
+                                        <label class="block font-bold text-slate-600 mb-1">Nama Perusahaan / Kantin <span class="text-red-400">*</span></label>
+                                        <input type="text" id="settingCanteenName" required placeholder="Contoh: KANTIN KITA"
+                                            class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-600 mb-1">Tagline / Slogan</label>
+                                        <input type="text" id="settingCanteenTagline" placeholder="Contoh: Sajian Lezat & Hangat"
+                                            class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block font-bold text-slate-600 mb-1">URL / Link Gambar QRIS (atau unggah
-                                gambar):</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="settingQrisImage"
-                                    class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs">
-                                <input type="file" id="qrisFileInput" accept="image/*"
-                                    onchange="handleQrisFileUpload(event)" class="hidden">
-                                <button type="button" onclick="document.getElementById('qrisFileInput').click()"
-                                    class="bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl font-bold border border-slate-300">
-                                    <i class="fa-solid fa-upload"></i> Unggah Gambar
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Alamat Lengkap</label>
+                                <input type="text" id="settingCanteenAddress" placeholder="Jl. ... No. ..."
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Nomor Telepon / WhatsApp</label>
+                                <input type="text" id="settingCanteenPhone" placeholder="0812-xxxx-xxxx"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Email (opsional)</label>
+                                <input type="email" id="settingCanteenEmail" placeholder="email@domain.com"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Website (opsional)</label>
+                                <input type="text" id="settingCanteenWebsite" placeholder="https://..."
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end pt-1">
+                                <button type="submit"
+                                    class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-extrabold text-xs shadow-sm">
+                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Profil Perusahaan
                                 </button>
                             </div>
-                        </div>
-                        <div class="sm:col-span-2 flex justify-end">
-                            <button type="submit"
-                                class="bg-slate-900 hover:bg-black text-white px-5 py-2 rounded-xl font-extrabold text-xs">
-                                Simpan Pengaturan Toko
-                            </button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
+
+                <!-- ═══════════ TAB 2: LAYOUT STRUK ═══════════ -->
+                <div id="stab-content-struk" class="settings-tab-content hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Panel Kiri: Editor -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                            <h3 class="font-extrabold text-slate-800 mb-1 flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-sliders text-orange-500"></i> Kustomisasi Layout Struk
+                            </h3>
+                            <p class="text-xs text-slate-400 mb-4">Atur apa yang tampil di struk termal / PDF kamu.</p>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Header Baris 1 (Nama Utama)</label>
+                                    <input type="text" id="receiptHeader1" placeholder="Nama kantin / perusahaan"
+                                        oninput="previewReceipt()"
+                                        class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Header Baris 2 (Tagline / Alamat)</label>
+                                    <input type="text" id="receiptHeader2" placeholder="Tagline atau alamat singkat"
+                                        oninput="previewReceipt()"
+                                        class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Header Baris 3 (Telp / Info tambahan)</label>
+                                    <input type="text" id="receiptHeader3" placeholder="Telp: 0812-xxxx | Jam: 07.00–14.00"
+                                        oninput="previewReceipt()"
+                                        class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Teks Footer / Ucapan Terima Kasih</label>
+                                    <input type="text" id="receiptFooter" placeholder="Terima kasih atas kepercayaan Anda!"
+                                        oninput="previewReceipt()"
+                                        class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-600 mb-1">Baris Footer Ke-2 (opsional)</label>
+                                    <input type="text" id="receiptFooter2" placeholder="Simpan struk ini sebagai bukti pembayaran"
+                                        oninput="previewReceipt()"
+                                        class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                                </div>
+                                <div class="border-t border-slate-100 pt-3">
+                                    <label class="block font-bold text-slate-600 mb-2">Tampilkan di Struk:</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowLogo" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Logo Kantin</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowDate" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Tanggal & Waktu</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowCashier" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Nama Kasir</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowQueue" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Nomor Antrean</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowPrice" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Rincian Harga</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" id="receiptShowChange" onchange="previewReceipt()" class="w-4 h-4 accent-orange-500" checked>
+                                            <span class="font-semibold text-slate-700">Kembalian</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end pt-1">
+                                    <button onclick="saveReceiptSettings()"
+                                        class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-extrabold text-xs shadow-sm">
+                                        <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Layout Struk
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Panel Kanan: Preview -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                            <h3 class="font-extrabold text-slate-800 mb-1 flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-eye text-orange-500"></i> Preview Struk (Live)
+                            </h3>
+                            <p class="text-xs text-slate-400 mb-3">Tampilan berubah otomatis saat kamu mengedit.</p>
+                            <div id="receiptPreviewBox" class="border border-dashed border-slate-300 rounded-xl p-3 font-mono text-[10px] text-slate-800 bg-white max-w-[200px] mx-auto leading-relaxed">
+                                <!-- live preview rendered by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB 3: PEMBAYARAN ═══════════ -->
+                <div id="stab-content-pembayaran" class="settings-tab-content hidden">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-wallet text-orange-500"></i> Pengaturan Pembayaran (Bank & QRIS)
+                        </h3>
+                        <form onsubmit="handleSaveSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Nama Bank Transfer:</label>
+                                <input type="text" id="settingBankName" placeholder="BCA / Mandiri / BRI"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-600 mb-1">Nomor Rekening:</label>
+                                <input type="text" id="settingBankNumber" placeholder="Nomor rekening"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono font-bold">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-600 mb-1">Atas Nama Rekening:</label>
+                                <input type="text" id="settingBankHolder" placeholder="Nama pemilik rekening"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-600 mb-1">URL / Link Gambar QRIS:</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="settingQrisImage" placeholder="https://... atau upload gambar"
+                                        class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs">
+                                    <input type="file" id="qrisFileInput" accept="image/*"
+                                        onchange="handleQrisFileUpload(event)" class="hidden">
+                                    <button type="button" onclick="document.getElementById('qrisFileInput').click()"
+                                        class="bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl font-bold border border-slate-300 shrink-0">
+                                        <i class="fa-solid fa-upload"></i> Upload
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="sm:col-span-2 flex justify-end pt-1">
+                                <button type="submit"
+                                    class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-extrabold text-xs shadow-sm">
+                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Pengaturan Pembayaran
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB 4: PIN AKSES ═══════════ -->
+                <div id="stab-content-pin" class="settings-tab-content hidden">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-shield-halved text-orange-500"></i> Pengaturan PIN Akses Perangkat
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="usersPinList">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════ TAB 5: KELOLA MENU ═══════════ -->
+                <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
 
                 <!-- 2. Kelola PIN Akun Kasir / Dapur / Admin -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -737,7 +917,9 @@
                     </div>
                 </div>
 
-                <!-- 3. Form Tambah Menu Baru -->
+                <!-- ═══════════ TAB 5: KELOLA MENU ═══════════ -->
+                <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
+                    <!-- 3. Form Tambah Menu Baru -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <h3 class="font-extrabold text-slate-700 mb-4 flex items-center gap-2 text-sm">
                         <i class="fa-solid fa-circle-plus text-orange-500"></i> Tambah Menu Makanan / Minuman Baru
@@ -795,6 +977,7 @@
                         <!-- Rendered by JS -->
                     </div>
                 </div>
+                </div><!-- end stab-content-menu -->
             </div>
         </section>
 
@@ -907,22 +1090,28 @@
 
             <div id="printableReceiptArea" class="p-5 text-center bg-white text-slate-900 font-mono text-xs overflow-y-auto flex-1">
                 <div class="text-center mb-2">
-                    <img src="/logo.png" alt="Kantin Kita" class="w-14 h-14 mx-auto mb-1.5 object-contain">
+                    <img id="receiptLogoImg" src="/logo.png" alt="Logo" class="w-12 h-12 mx-auto mb-1 object-contain">
                     <h3 class="font-extrabold text-base tracking-tight" id="receiptCanteenName">KANTIN KITA</h3>
-                    <p class="text-[10px] text-slate-500 font-semibold" id="receiptCanteenAddress">Sajian Lezat & Hangat • Rasa Rumah, Harga Ramah</p>
-                    <p class="text-[10px] text-slate-400" id="receiptDateTime">18/11/2026 12:00</p>
-                    <p class="text-[10px] text-slate-500" id="receiptCashierName">Kasir: Kasir</p>
+                    <p class="text-[10px] text-slate-500 font-semibold" id="receiptCanteenAddress">Sajian Lezat & Hangat</p>
+                    <p class="text-[10px] text-slate-500" id="receiptHeader3Display"></p>
+                </div>
+                <div id="receiptDateRow" class="text-[10px] text-slate-400 text-center">
+                    <span id="receiptDateTime">18/11/2026 12:00</span>
+                </div>
+                <div id="receiptCashierRow" class="text-[10px] text-slate-500 text-center">
+                    <span id="receiptCashierName">Kasir: Kasir</span>
                 </div>
 
-                <div class="border-t border-b border-dashed border-slate-400 py-3 my-2">
-                    <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">NOMOR
-                        ORDERAN</span>
+                <div id="receiptQueueSection" class="border-t border-b border-dashed border-slate-400 py-3 my-2">
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">NOMOR ORDERAN</span>
                     <span id="receiptOrderNumber" class="text-4xl font-black tracking-tight text-slate-900">#001</span>
                 </div>
 
+                <div id="receiptItemsSection">
                 <div id="receiptItemsList" class="text-left space-y-1.5 my-3">
                     <!-- Items -->
                 </div>
+                </div><!-- end receiptItemsSection -->
 
                 <div id="receiptNotesSection"
                     class="hidden text-left text-[11px] bg-slate-50 p-2 rounded border border-slate-200 my-2">
@@ -953,7 +1142,7 @@
 
                 <div class="mt-4 pt-2 border-t border-dashed border-slate-300 text-center text-[10px] text-slate-500">
                     <p id="receiptFooterText">Terima kasih atas kunjungan Anda!</p>
-                    <p>Simpan struk ini & dengarkan nomor Anda dipanggil.</p>
+                    <p id="receiptFooterText2">Simpan struk ini & dengarkan nomor Anda dipanggil.</p>
                 </div>
             </div>
 
@@ -1075,7 +1264,9 @@
 
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
+                navigator.serviceWorker.register('/sw.js').then((reg) => {
+                    reg.update();
+                }).catch(() => {});
             }
         }
 
@@ -1787,9 +1978,30 @@
 
         function showReceiptModal(order) {
             currentReceiptOrder = order;
-            document.getElementById('receiptCanteenName').innerText = appSettings.canteen_name || 'KANTIN SEKOLAH';
-            document.getElementById('receiptCanteenAddress').innerText = appSettings.canteen_address || 'Struk Pembayaran Sah';
-            document.getElementById('receiptFooterText').innerText = appSettings.receipt_footer || 'Terima kasih atas kunjungan Anda!';
+            const s = appSettings;
+
+            // Header struk dari settings receipt_header* (fallback ke canteen_name)
+            document.getElementById('receiptCanteenName').innerText = s.receipt_header1 || s.canteen_name || 'KANTIN';
+            document.getElementById('receiptCanteenAddress').innerText = s.receipt_header2 || s.canteen_tagline || s.canteen_address || '';
+
+            // Baris header 3 (telp / info tambahan)
+            const h3El = document.getElementById('receiptHeader3Display');
+            if (h3El) h3El.innerText = s.receipt_header3 || '';
+
+            // Footer
+            document.getElementById('receiptFooterText').innerText = s.receipt_footer || 'Terima kasih atas kunjungan Anda!';
+            const footer2El = document.getElementById('receiptFooterText2');
+            if (footer2El) footer2El.innerText = s.receipt_footer2 || '';
+
+            // Show/hide berdasarkan pengaturan
+            const toggle = (id, show) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !show); };
+            const logoImg = document.getElementById('receiptLogoImg');
+            if (logoImg) logoImg.classList.toggle('hidden', s.receipt_show_logo === '0');
+            toggle('receiptDateRow', s.receipt_show_date !== '0');
+            toggle('receiptCashierRow', s.receipt_show_cashier !== '0');
+            toggle('receiptQueueSection', s.receipt_show_queue !== '0');
+            toggle('receiptItemsSection', s.receipt_show_price !== '0');
+            toggle('receiptCashRow', s.receipt_show_change !== '0');
 
             document.getElementById('receiptOrderNumber').innerText = '#' + order.queue_formatted;
             document.getElementById('receiptDateTime').innerText = order.created_at || new Date().toLocaleString('id-ID');
@@ -2016,6 +2228,24 @@
         }
 
         // --- 8. MANAJEMEN MENU & PENGATURAN TOKO ---
+
+        // ── Tab navigasi pengaturan
+        function switchSettingsTab(tab) {
+            document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            });
+            document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.add('hidden'));
+            const activeBtn = document.getElementById('stab-' + tab);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('bg-white', 'text-slate-600', 'border', 'border-slate-200');
+            }
+            const content = document.getElementById('stab-content-' + tab);
+            if (content) content.classList.remove('hidden');
+            if (tab === 'struk') previewReceipt();
+        }
+
         function applySettingsToUI() {
             if (appSettings.canteen_name) {
                 document.getElementById('headerBrandName').innerText = appSettings.canteen_name;
@@ -2037,39 +2267,144 @@
         }
 
         function populateSettingsForm() {
-            document.getElementById('settingCanteenName').value = appSettings.canteen_name || '';
-            document.getElementById('settingCanteenAddress').value = appSettings.canteen_address || '';
-            document.getElementById('settingBankName').value = appSettings.bank_name || '';
-            document.getElementById('settingBankNumber').value = appSettings.bank_number || '';
-             document.getElementById('settingBankHolder').value = appSettings.bank_holder || '';
-            document.getElementById('settingQrisImage').value = appSettings.qris_image || '';
+            const s = appSettings;
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val !== '0'; };
+
+            // Profil tab
+            set('settingCanteenName', s.canteen_name);
+            set('settingCanteenTagline', s.canteen_tagline);
+            set('settingCanteenAddress', s.canteen_address);
+            set('settingCanteenPhone', s.canteen_phone);
+            set('settingCanteenEmail', s.canteen_email);
+            set('settingCanteenWebsite', s.canteen_website);
+
+            // Pembayaran tab
+            set('settingBankName', s.bank_name);
+            set('settingBankNumber', s.bank_number);
+            set('settingBankHolder', s.bank_holder);
+            set('settingQrisImage', s.qris_image);
+
+            // Struk tab
+            set('receiptHeader1', s.receipt_header1 || s.canteen_name || '');
+            set('receiptHeader2', s.receipt_header2 || s.canteen_tagline || '');
+            set('receiptHeader3', s.receipt_header3 || s.canteen_phone || '');
+            set('receiptFooter', s.receipt_footer);
+            set('receiptFooter2', s.receipt_footer2);
+            setChk('receiptShowLogo', s.receipt_show_logo);
+            setChk('receiptShowDate', s.receipt_show_date);
+            setChk('receiptShowCashier', s.receipt_show_cashier);
+            setChk('receiptShowQueue', s.receipt_show_queue);
+            setChk('receiptShowPrice', s.receipt_show_price);
+            setChk('receiptShowChange', s.receipt_show_change);
+        }
+
+        // ── Live preview struk
+        function previewReceipt() {
+            const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+            const chk = id => { const el = document.getElementById(id); return el ? el.checked : true; };
+            const h1 = g('receiptHeader1') || 'NAMA KANTIN';
+            const h2 = g('receiptHeader2');
+            const h3 = g('receiptHeader3');
+            const footer = g('receiptFooter') || 'Terima kasih!';
+            const footer2 = g('receiptFooter2');
+            const showLogo = chk('receiptShowLogo');
+            const showDate = chk('receiptShowDate');
+            const showCashier = chk('receiptShowCashier');
+            const showQueue = chk('receiptShowQueue');
+            const showPrice = chk('receiptShowPrice');
+            const showChange = chk('receiptShowChange');
+
+            const box = document.getElementById('receiptPreviewBox');
+            if (!box) return;
+            box.innerHTML = `
+                <div class="text-center mb-1">
+                    ${showLogo ? '<div class="text-2xl mb-1">🏪</div>' : ''}
+                    <div class="font-black text-[11px]">${h1}</div>
+                    ${h2 ? `<div class="text-[9px] text-slate-500">${h2}</div>` : ''}
+                    ${h3 ? `<div class="text-[9px] text-slate-500">${h3}</div>` : ''}
+                </div>
+                <div class="border-t border-dashed border-slate-400 my-1"></div>
+                ${showDate ? '<div class="text-[9px] text-center text-slate-500">19/11/2026 14:00</div>' : ''}
+                ${showCashier ? '<div class="text-[9px] text-center text-slate-500">Kasir: Kasir 1</div>' : ''}
+                ${showQueue ? `<div class="border-t border-b border-dashed border-slate-400 py-1 my-1 text-center"><div class="text-[8px] text-slate-500 uppercase">NOMOR ORDERAN</div><div class="text-2xl font-black">#001</div></div>` : ''}
+                ${showPrice ? `<div class="text-[9px] my-1">
+                    <div class="flex justify-between"><span>Nasi Goreng ×1</span><span>Rp 15.000</span></div>
+                    <div class="flex justify-between"><span>Es Teh Manis ×2</span><span>Rp 8.000</span></div>
+                    <div class="border-t border-dashed mt-1 pt-1 flex justify-between font-black"><span>TOTAL</span><span>Rp 23.000</span></div>
+                </div>` : ''}
+                ${showChange ? '<div class="text-[9px] text-right text-slate-600">Bayar: Rp 25.000<br>Kembali: Rp 2.000</div>' : ''}
+                <div class="border-t border-dashed border-slate-400 mt-1 pt-1 text-center text-[8px] text-slate-500">
+                    <div>${footer}</div>
+                    ${footer2 ? `<div>${footer2}</div>` : ''}
+                </div>
+            `;
+        }
+
+        async function saveReceiptSettings() {
+            const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+            const chk = id => { const el = document.getElementById(id); return (el && el.checked) ? '1' : '0'; };
+            const payload = {
+                receipt_header1: g('receiptHeader1'),
+                receipt_header2: g('receiptHeader2'),
+                receipt_header3: g('receiptHeader3'),
+                receipt_footer: g('receiptFooter'),
+                receipt_footer2: g('receiptFooter2'),
+                receipt_show_logo: chk('receiptShowLogo'),
+                receipt_show_date: chk('receiptShowDate'),
+                receipt_show_cashier: chk('receiptShowCashier'),
+                receipt_show_queue: chk('receiptShowQueue'),
+                receipt_show_price: chk('receiptShowPrice'),
+                receipt_show_change: chk('receiptShowChange')
+            };
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Gagal menyimpan layout struk');
+                Object.assign(appSettings, payload);
+                showToast('✅ Layout struk berhasil disimpan!');
+            } catch (err) { alert(err.message); }
         }
 
         async function handleSaveSettings(e) {
             e.preventDefault();
-            const payload = {
-                canteen_name: document.getElementById('settingCanteenName').value.trim(),
-                canteen_address: document.getElementById('settingCanteenAddress').value.trim(),
-                bank_name: document.getElementById('settingBankName').value.trim(),
-                bank_number: document.getElementById('settingBankNumber').value.trim(),
-                bank_holder: document.getElementById('settingBankHolder').value.trim(),
-                qris_image: document.getElementById('settingQrisImage').value.trim()
-            };
+            // kumpulkan semua field yang ada
+            const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : null; };
+            const payload = {};
+            const fields = ['settingCanteenName','settingCanteenTagline','settingCanteenAddress',
+                            'settingCanteenPhone','settingCanteenEmail','settingCanteenWebsite',
+                            'settingBankName','settingBankNumber','settingBankHolder','settingQrisImage'];
+            const keys =   ['canteen_name','canteen_tagline','canteen_address',
+                            'canteen_phone','canteen_email','canteen_website',
+                            'bank_name','bank_number','bank_holder','qris_image'];
+            fields.forEach((f, i) => { const v = g(f); if (v !== null) payload[keys[i]] = v; });
 
             try {
                 const res = await fetch('/api/settings', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + authToken
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
                     body: JSON.stringify(payload)
                 });
-                if (!res.ok) throw new Error('Gagal menyimpan pengaturan toko');
-                showToast('Pengaturan toko berhasil diperbarui!');
-            } catch (err) {
-                alert(err.message);
-            }
+                if (!res.ok) throw new Error('Gagal menyimpan pengaturan');
+                Object.assign(appSettings, payload);
+                applySettingsToUI();
+                showToast('✅ Pengaturan berhasil diperbarui!');
+            } catch (err) { alert(err.message); }
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const preview = document.getElementById('previewLogo');
+                if (preview) preview.src = evt.target.result;
+                showToast('Logo preview diperbarui. Upload ke server belum didukung secara otomatis — gunakan GitHub.');
+            };
+            reader.readAsDataURL(file);
         }
 
         function handleQrisFileUpload(e) {

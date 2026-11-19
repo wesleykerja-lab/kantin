@@ -108,16 +108,51 @@ async function initDb() {
     if (Number(sCount.rows[0].c) === 0) {
       const defaults = {
         canteen_name: 'KANTIN KITA',
-        canteen_address: 'Sajian Lezat & Hangat • Rasa Rumah, Harga Ramah',
+        canteen_tagline: 'Sajian Lezat & Hangat',
+        canteen_address: 'Area Kantin Utama',
         canteen_phone: '0812-3456-7890',
+        canteen_email: '',
+        canteen_website: '',
         qris_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=KANTIN-KITA-POS',
         bank_name: 'BCA',
         bank_number: '8830-1234-5678',
         bank_holder: 'Kantin Kita',
-        receipt_footer: 'Terima kasih telah berbelanja di Kantin Kita!'
+        receipt_header1: 'KANTIN KITA',
+        receipt_header2: 'Sajian Lezat & Hangat',
+        receipt_header3: '',
+        receipt_footer: 'Terima kasih telah berbelanja di Kantin Kita!',
+        receipt_footer2: 'Simpan struk ini sebagai bukti pembayaran.',
+        receipt_show_logo: '1',
+        receipt_show_date: '1',
+        receipt_show_cashier: '1',
+        receipt_show_queue: '1',
+        receipt_show_price: '1',
+        receipt_show_change: '1'
       };
       for (const [k, v] of Object.entries(defaults)) {
         await client.execute({ sql: 'INSERT INTO settings (key, value) VALUES (?, ?)', args: [k, v] });
+      }
+    } else {
+      // Tambah field baru kalau belum ada (untuk upgrade)
+      const newFields = {
+        canteen_tagline: 'Sajian Lezat & Hangat',
+        canteen_email: '',
+        canteen_website: '',
+        receipt_header1: '',
+        receipt_header2: '',
+        receipt_header3: '',
+        receipt_footer2: 'Simpan struk ini sebagai bukti pembayaran.',
+        receipt_show_logo: '1',
+        receipt_show_date: '1',
+        receipt_show_cashier: '1',
+        receipt_show_queue: '1',
+        receipt_show_price: '1',
+        receipt_show_change: '1'
+      };
+      for (const [k, v] of Object.entries(newFields)) {
+        try {
+          await client.execute({ sql: 'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', args: [k, v] });
+        } catch (e) {}
       }
     }
 
