@@ -110,7 +110,7 @@ function getLocalIpAddress() {
 // ==========================================
 // AUTHENTICATION & LOGIN APIS (ANTI BRUTE-FORCE)
 // ==========================================
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const ip = req.ip || req.connection.remoteAddress;
   const rateCheck = checkRateLimit(ip);
   if (!rateCheck.allowed) {
@@ -125,7 +125,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(400).json({ error: 'Peran dan PIN wajib diisi.' });
     }
 
-    const user = db.verifyPin(role, String(pin).trim());
+    const user = await db.verifyPin(role, String(pin).trim());
     if (!user) {
       recordFailedAttempt(ip);
       return res.status(401).json({ error: 'PIN yang Anda masukkan salah. Silakan coba lagi.' });
@@ -157,31 +157,37 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 // Info Server & IP untuk Tablet
-app.get('/api/info', (req, res) => {
-  const localIp = getLocalIpAddress();
-  res.json({
-    localIp,
-    port: PORT,
-    tabletUrl: `http://${localIp}:${PORT}`,
-    today: db.getTodayDateString(),
-    nextQueue: db.getNextQueueNumber(),
-    settings: db.getAllSettings()
-  });
+app.get('/api/info', async (req, res) => {
+  try {
+    const localIp = getLocalIpAddress();
+    const nextQ = await db.getNextQueueNumber();
+    const settings = await db.getAllSettings();
+    res.json({
+      localIp,
+      port: PORT,
+      tabletUrl: `http://${localIp}:${PORT}`,
+      today: db.getTodayDateString(),
+      nextQueue: nextQ,
+      settings
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Settings Endpoints
-app.get('/api/settings', (req, res) => {
+app.get('/api/settings', async (req, res) => {
   try {
-    const settings = db.getAllSettings();
+    const settings = await db.getAllSettings();
     res.json(settings);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.put('/api/settings', authenticate(['admin']), (req, res) => {
+app.put('/api/settings', authenticate(['admin']), async (req, res) => {
   try {
-    const updated = db.updateSettings(req.body);
+    const updated = await db.updateSettings(req.body);
     io.emit('settings_updated', updated);
     res.json({ success: true, settings: updated });
   } catch (err) {
@@ -189,23 +195,23 @@ app.put('/api/settings', authenticate(['admin']), (req, res) => {
   }
 });
 
-app.get('/api/auth/users', authenticate(['admin']), (req, res) => {
+app.get('/api/auth/users', authenticate(['admin']), async (req, res) => {
   try {
-    const users = db.getAllUsers();
+    const users = await db.getAllUsers();
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.put('/api/auth/users/:role', authenticate(['admin']), (req, res) => {
+app.put('/api/auth/users/:role', authenticate(['admin']), async (req, res) => {
   try {
     const { role } = req.params;
     const { pin, name } = req.body;
     if (!pin || String(pin).length < 4) {
       return res.status(400).json({ error: 'PIN minimal harus 4 digit angka.' });
     }
-    const updated = db.updatePin(role, String(pin), name);
+    const updated = await db.updatePin(role, String(pin), name);
     res.json({ success: true, user: updated });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -213,58 +219,58 @@ app.put('/api/auth/users/:role', authenticate(['admin']), (req, res) => {
 });
 
 // Menu Endpoints
-app.get('/api/menus', (req, res) => {
+app.get('/api/menus', async (req, res) => {
   try {
-    const menus = db.getAllMenus();
+    const menus = await db.getAllMenus();
     res.json(menus);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/menus', authenticate(['admin']), (req, res) => {
+app.post('/api/menus', authenticate(['admin']), async (req, res) => {
   try {
     const { name, price, category, icon } = req.body;
     if (!name || !price) {
       return res.status(400).json({ error: 'Nama dan harga menu wajib diisi.' });
     }
-    const newMenu = db.addMenu(name, parseInt(price, 10), category || 'Makanan', icon || '🍽️');
-    io.emit('menu_updated', db.getAllMenus());
+    const newMenu = await db.addMenu(name, parseInt(price, 10), category || 'Makanan', icon || '🍽️');
+    io.emit('menu_updated', await db.getAllMenus());
     res.json(newMenu);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.put('/api/menus/:id', authenticate(['admin']), (req, res) => {
+app.put('/api/menus/:id', authenticate(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, price, category, icon } = req.body;
-    const updated = db.updateMenu(id, name, parseInt(price, 10), category, icon);
-    io.emit('menu_updated', db.getAllMenus());
+    const updated = await db.updateMenu(id, name, parseInt(price, 10), category, icon);
+    io.emit('menu_updated', await db.getAllMenus());
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.patch('/api/menus/:id/availability', authenticate(['kasir', 'admin']), (req, res) => {
+app.patch('/api/menus/:id/availability', authenticate(['kasir', 'admin']), async (req, res) => {
   try {
     const { id } = req.params;
     const { isAvailable } = req.body;
-    const updated = db.toggleMenuAvailability(id, isAvailable);
-    io.emit('menu_updated', db.getAllMenus());
+    const updated = await db.toggleMenuAvailability(id, isAvailable);
+    io.emit('menu_updated', await db.getAllMenus());
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.delete('/api/menus/:id', authenticate(['admin']), (req, res) => {
+app.delete('/api/menus/:id', authenticate(['admin']), async (req, res) => {
   try {
     const { id } = req.params;
-    db.deleteMenu(id);
-    io.emit('menu_updated', db.getAllMenus());
+    await db.deleteMenu(id);
+    io.emit('menu_updated', await db.getAllMenus());
     res.json({ success: true, message: 'Menu berhasil dihapus' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -272,41 +278,41 @@ app.delete('/api/menus/:id', authenticate(['admin']), (req, res) => {
 });
 
 // Order Endpoints
-app.get('/api/orders/today', (req, res) => {
+app.get('/api/orders/today', async (req, res) => {
   try {
-    const orders = db.getTodayOrders();
+    const orders = await db.getTodayOrders();
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/orders/last', (req, res) => {
+app.get('/api/orders/last', async (req, res) => {
   try {
-    const lastOrder = db.getLastOrder();
+    const lastOrder = await db.getLastOrder();
     res.json(lastOrder);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/orders/next-queue', (req, res) => {
+app.get('/api/orders/next-queue', async (req, res) => {
   try {
-    const nextQueue = db.getNextQueueNumber();
+    const nextQueue = await db.getNextQueueNumber();
     res.json({ nextQueue, formatted: String(nextQueue).padStart(3, '0') });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
   try {
     const { items, totalAmount, paymentMethod, amountPaid, changeDue, cashierName, orderNotes } = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ error: 'Daftar item pesanan kosong.' });
     }
 
-    const order = db.createOrder({
+    const order = await db.createOrder({
       items,
       totalAmount,
       paymentMethod: paymentMethod || 'Tunai',
@@ -317,10 +323,11 @@ app.post('/api/orders', (req, res) => {
     });
 
     // Broadcast ke Tablet 2 (Dapur) & Kasir secara real-time
+    const nextQ = await db.getNextQueueNumber();
     io.emit('order_created', order);
     io.emit('next_queue_updated', {
-      nextQueue: db.getNextQueueNumber(),
-      formatted: String(db.getNextQueueNumber()).padStart(3, '0')
+      nextQueue: nextQ,
+      formatted: String(nextQ).padStart(3, '0')
     });
 
     res.json(order);
@@ -329,11 +336,11 @@ app.post('/api/orders', (req, res) => {
   }
 });
 
-app.patch('/api/orders/:id/status', (req, res) => {
+app.patch('/api/orders/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const updatedOrder = db.updateOrderStatus(id, status);
+    const updatedOrder = await db.updateOrderStatus(id, status);
     
     // Broadcast status change ke semua tablet
     io.emit('order_status_changed', updatedOrder);
@@ -344,10 +351,10 @@ app.patch('/api/orders/:id/status', (req, res) => {
 });
 
 // Endpoint Panggil Suara
-app.post('/api/orders/:id/call', (req, res) => {
+app.post('/api/orders/:id/call', async (req, res) => {
   try {
     const { id } = req.params;
-    const order = db.updateOrderStatus(id, 'ready');
+    const order = await db.updateOrderStatus(id, 'ready');
 
     const payload = {
       orderId: order.id,
@@ -369,15 +376,15 @@ app.post('/api/orders/:id/call', (req, res) => {
 });
 
 // Endpoint Hapus / Clear Semua Log Pencatatan & Reset Antrean (Hanya Admin)
-app.post('/api/orders/clear-all', (req, res) => {
+app.post('/api/orders/clear-all', async (req, res) => {
   try {
     const { pin } = req.body;
-    const adminUser = db.verifyPin('admin', String(pin || '').trim());
+    const adminUser = await db.verifyPin('admin', String(pin || '').trim());
     if (!adminUser) {
       return res.status(401).json({ error: 'PIN Admin salah. Masukkan PIN Admin untuk menghapus log pencatatan.' });
     }
 
-    db.clearAllOrders();
+    await db.clearAllOrders();
 
     io.emit('orders_cleared');
     io.emit('next_queue_updated', {
@@ -392,19 +399,19 @@ app.post('/api/orders/clear-all', (req, res) => {
 });
 
 // Laporan & Rekap Penjualan
-app.get('/api/reports/summary', (req, res) => {
+app.get('/api/reports/summary', async (req, res) => {
   try {
-    const summary = db.getSalesSummary();
+    const summary = await db.getSalesSummary();
     res.json(summary);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.get('/api/orders/history', (req, res) => {
+app.get('/api/orders/history', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const history = db.getHistoryOrders(startDate, endDate);
+    const history = await db.getHistoryOrders(startDate, endDate);
     res.json(history);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -415,7 +422,7 @@ app.get('/api/orders/history', (req, res) => {
 app.get('/api/reports/export-excel', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const orders = db.getHistoryOrders(startDate, endDate);
+    const orders = await db.getHistoryOrders(startDate, endDate);
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'KantinPintar POS';
@@ -538,25 +545,35 @@ app.get('/api/reports/export-excel', async (req, res) => {
 // ==========================================
 // SOCKET.IO REALTIME EVENTS
 // ==========================================
-io.on('connection', (socket) => {
-  socket.emit('init_data', {
-    menus: db.getAllMenus(),
-    todayOrders: db.getTodayOrders(),
-    nextQueue: db.getNextQueueNumber(),
-    nextFormatted: String(db.getNextQueueNumber()).padStart(3, '0'),
-    settings: db.getAllSettings()
-  });
+io.on('connection', async (socket) => {
+  try {
+    const menus = await db.getAllMenus();
+    const todayOrders = await db.getTodayOrders();
+    const nextQ = await db.getNextQueueNumber();
+    const settings = await db.getAllSettings();
+
+    socket.emit('init_data', {
+      menus,
+      todayOrders,
+      nextQueue: nextQ,
+      nextFormatted: String(nextQ).padStart(3, '0'),
+      settings
+    });
+  } catch (err) {
+    console.error('Socket init_data error:', err.message);
+  }
 });
 
 // Jalankan Server
 server.listen(PORT, '0.0.0.0', () => {
   const localIp = getLocalIpAddress();
   console.log(`\n======================================================`);
-  console.log(`🚀 SISTEM POS KANTIN 2 TABLET AKTIF & AMAN`);
+  console.log(`🚀 SISTEM POS KANTIN AKTIF DENGAN TURSO CLOUD SQLITE`);
   console.log(`======================================================`);
   console.log(`💻 Buka di Komputer Kasir : http://localhost:${PORT}`);
   console.log(`📱 Buka di Tablet 1 (Kasir) : http://${localIp}:${PORT}?mode=kasir`);
   console.log(`📢 Buka di Tablet 2 (Dapur) : http://${localIp}:${PORT}?mode=panggilan`);
   console.log(`📺 Buka di Layar TV / Murid : http://${localIp}:${PORT}?mode=display`);
+  console.log(`☁️ Cloud Database: Turso (Singapore) connected`);
   console.log(`======================================================\n`);
 });
