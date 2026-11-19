@@ -151,6 +151,7 @@
                 border-radius: 0 !important;
                 max-height: 100% !important;
                 height: 100% !important;
+                overflow: hidden !important;
                 animation: none !important;
                 box-shadow: none !important;
                 display: flex !important;
@@ -172,11 +173,15 @@
             }
             #orderNotesContainer { display: none !important; }
             #cartFooterArea {
-                padding: 4px 8px 6px 8px !important;
-                gap: 3px !important;
+                padding: 3px 8px 4px 8px !important;
+                gap: 2px !important;
                 background: #f8fafc !important;
                 border-top: 1px solid #e2e8f0 !important;
                 flex-shrink: 0 !important;
+                margin-top: auto !important;
+            }
+            #sectionPay-Tunai .flex.gap-1.overflow-x-auto {
+                display: none !important;
             }
             #cartTotal { font-size: 1.1rem !important; }
             .pay-tab-btn {
@@ -823,7 +828,7 @@
             </div>
 
             <div class="text-center mb-3 sm:mb-5 shrink-0">
-                <h2 class="text-lg sm:text-3xl md:text-4xl font-black tracking-wider text-orange-400 uppercase">KANTIN KITA ¢Â¬” STATUS ANTREAN</h2>
+                <h2 class="text-lg sm:text-3xl md:text-4xl font-black tracking-wider text-orange-400 uppercase">KANTIN KITA Â¬” STATUS ANTREAN</h2>
                 <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Sajian Lezat & Hangat • Silakan ambil pesanan jika nomor Anda di kolom SIAP DIAMBIL</p>
             </div>
 
@@ -865,12 +870,14 @@
             <div class="max-w-4xl mx-auto space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800">¢¯¸ Pengaturan Sistem</h2>
+                        <h2 class="text-2xl font-black text-slate-800">⚙️ Pengaturan Sistem</h2>
                         <p class="text-xs sm:text-sm text-slate-500">Kelola profil perusahaan, layout struk, menu, PIN tablet, & lebih.</p>
                     </div>
-                    <button onclick="switchMode('kasir')"
-                        class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold self-start">
-                        <i class="fa-solid fa-arrow-left mr-1.5"></i> Kembali
+                    <button onclick="handleLogout()"
+                        class="bg-slate-800 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold self-start transition flex items-center gap-1.5"
+                        title="Keluar dari Akun Admin">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Keluar Akun</span>
                     </button>
                 </div>
 
@@ -898,7 +905,7 @@
                     </button>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 1: PROFIL PERUSAHAAN ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 1: PROFIL PERUSAHAAN ——————————— -->
                 <div id="stab-content-profil" class="settings-tab-content space-y-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-1 flex items-center gap-2 text-sm">
@@ -959,7 +966,7 @@
                     </div>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 2: LAYOUT STRUK ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 2: LAYOUT STRUK ——————————— -->
                 <div id="stab-content-struk" class="settings-tab-content hidden space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Panel Kiri: Editor -->
@@ -983,7 +990,7 @@
                                 </div>
                                 <div>
                                     <label class="block font-bold text-slate-600 mb-1">Header Baris 3 (Telp / Info tambahan)</label>
-                                    <input type="text" id="receiptHeader3" placeholder="Telp: 0812-xxxx | Jam: 07.00¢Â¬“14.00"
+                                    <input type="text" id="receiptHeader3" placeholder="Telp: 0812-xxxx | Jam: 07.00Â¬“14.00"
                                         oninput="previewReceipt()"
                                         class="w-full px-3 py-2 rounded-xl border border-slate-300">
                                 </div>
@@ -1049,7 +1056,7 @@
                     </div>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 3: PEMBAYARAN ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 3: PEMBAYARAN ——————————— -->
                 <div id="stab-content-pembayaran" class="settings-tab-content hidden">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
@@ -1094,7 +1101,7 @@
                     </div>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 4: PIN AKSES ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 4: PIN AKSES ——————————— -->
                 <div id="stab-content-pin" class="settings-tab-content hidden">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
@@ -1106,7 +1113,7 @@
                     </div>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 5: KELOLA MENU ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 5: KELOLA MENU ——————————— -->
                 <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
 
                 <!-- 2. Kelola PIN Akun Kasir / Dapur / Admin -->
@@ -1119,7 +1126,7 @@
                     </div>
                 </div>
 
-                <!-- ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• TAB 5: KELOLA MENU ¢•¢•¢•¢•¢•¢•¢•¢•¢•¢•¢• -->
+                <!-- ——————————— TAB 5: KELOLA MENU ——————————— -->
                 <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
                     <!-- 3. Form Tambah Menu Baru -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -1156,7 +1163,7 @@
                                 <option value="°">° Mie / Bakso</option>
                                 <option value="°ª">°ª Roti / Snack</option>
                                 <option value="°¤">°¤ Minuman</option>
-                                <option value="¢">¢ Kopi / Teh</option>
+                                <option value=""> Kopi / Teh</option>
                             </select>
                         </div>
                         <div class="sm:col-span-12 flex justify-end mt-1">
@@ -1653,12 +1660,13 @@
                 btnLaporan.classList.add('hidden');
                 switchMode('panggilan');
             } else if (currentUser.role === 'admin') {
-                btnKasir.classList.remove('hidden');
-                btnPanggilan.classList.remove('hidden');
-                btnDisplay.classList.remove('hidden');
+                // Admin HANYA mengelola Pengaturan & Laporan (tidak melihat pesanan kasir & dapur)
+                btnKasir.classList.add('hidden');
+                btnPanggilan.classList.add('hidden');
+                btnDisplay.classList.add('hidden');
                 btnPengaturan.classList.remove('hidden');
                 btnLaporan.classList.remove('hidden');
-                switchMode('kasir');
+                switchMode('pengaturan');
             }
         }
 
@@ -1858,7 +1866,7 @@
             const headerEl = document.getElementById('mainHeader');
             if (headerEl) headerEl.classList.remove('hidden');
             if (currentUser && currentUser.role === 'admin') {
-                switchMode('kasir');
+                switchMode('pengaturan');
             } else if (currentUser && currentUser.role === 'dapur') {
                 switchMode('panggilan');
             } else {
@@ -2431,7 +2439,7 @@
 
         // --- 8. MANAJEMEN MENU & PENGATURAN TOKO ---
 
-        // ¢”Â¬¢”Â¬ Tab navigasi pengaturan
+        // ”Â¬”Â¬ Tab navigasi pengaturan
         function switchSettingsTab(tab) {
             document.querySelectorAll('.settings-tab-btn').forEach(btn => {
                 btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
@@ -2501,7 +2509,7 @@
             setChk('receiptShowChange', s.receipt_show_change);
         }
 
-        // ¢”Â¬¢”Â¬ Live preview struk
+        // ”Â¬”Â¬ Live preview struk
         function previewReceipt() {
             const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
             const chk = id => { const el = document.getElementById(id); return el ? el.checked : true; };
@@ -2567,7 +2575,7 @@
                 });
                 if (!res.ok) throw new Error('Gagal menyimpan layout struk');
                 Object.assign(appSettings, payload);
-                showToast('¢Â¦ Layout struk berhasil disimpan!');
+                showToast('Â¦ Layout struk berhasil disimpan!');
             } catch (err) { alert(err.message); }
         }
 
@@ -2593,7 +2601,7 @@
                 if (!res.ok) throw new Error('Gagal menyimpan pengaturan');
                 Object.assign(appSettings, payload);
                 applySettingsToUI();
-                showToast('¢Â¦ Pengaturan berhasil diperbarui!');
+                showToast('Â¦ Pengaturan berhasil diperbarui!');
             } catch (err) { alert(err.message); }
         }
 
@@ -2604,7 +2612,7 @@
             reader.onload = function(evt) {
                 const preview = document.getElementById('previewLogo');
                 if (preview) preview.src = evt.target.result;
-                showToast('Logo preview diperbarui. Upload ke server belum didukung secara otomatis ¢Â¬” gunakan GitHub.');
+                showToast('Logo preview diperbarui. Upload ke server belum didukung secara otomatis Â¬” gunakan GitHub.');
             };
             reader.readAsDataURL(file);
         }
