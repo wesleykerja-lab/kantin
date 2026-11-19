@@ -1,5 +1,5 @@
 // Service Worker Kantin Kita POS v3 – Mobile Bug Fix Build
-const CACHE_NAME = 'kantin-pos-v3';
+const CACHE_NAME = 'kantin-pos-v4';
 
 self.addEventListener('install', (e) => {
   // Langsung aktif tanpa menunggu
