@@ -1,35 +1,45 @@
-const CACHE_NAME = 'kantin-pos-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+// Service Worker Kantin Kita POS v3 – Mobile Bug Fix Build
+const CACHE_NAME = 'kantin-pos-v3';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+  // Langsung aktif tanpa menunggu
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
+  // Bersihkan semua cache lama secara agresif
   e.waitUntil(
     caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      );
-    })
+      return Promise.all(keys.map((k) => caches.delete(k)));
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
-  // Let dynamic APIs and Socket.IO pass through to network
-  if (e.request.url.includes('/api/') || e.request.url.includes('/socket.io/')) {
-    return;
+  const url = e.request.url;
+  
+  // Semua request API, socket, dan dokumen HTML selalu WAJIB ambil dari Network (fresh)
+  if (
+    url.includes('/api/') ||
+    url.includes('/socket.io/') ||
+    e.request.mode === 'navigate' ||
+    url.endsWith('.html') ||
+    url.endsWith('/')
+  ) {
+    return; // Pass through langsung ke network, jangan pernah tahan di cache
   }
+
+  // Aset statis lainnya: ambil dari network dulu, fallback ke cache jika offline
   e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
+    fetch(e.request)
+      .then((response) => {
+        // Simpan cache aset jika sukses
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, responseToCache));
+        }
+        return response;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
-

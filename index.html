@@ -59,6 +59,159 @@
             scrollbar-width: none;
         }
 
+        /* =====================================================
+           MOBILE LANDSCAPE Ã¢â‚¬â€œ Compact Header + Split Cart Sidebar
+           ===================================================== */
+        @media (orientation: landscape) and (max-height: 500px) {
+            /* Header menjadi 1 baris, sangat compact */
+            #mainHeader {
+                flex-direction: row !important;
+                align-items: center !important;
+                padding-top: 3px !important;
+                padding-bottom: 3px !important;
+                gap: 4px !important;
+            }
+            /* Logo lebih kecil */
+            #mainHeader .w-9 {
+                width: 22px !important;
+                height: 22px !important;
+            }
+            /* Sembunyikan tanggal di landscape HP */
+            #currentDateDisplay { display: none !important; }
+
+            /* Nav tabs compact */
+            #navTabsContainer { padding: 2px !important; }
+            .mode-btn {
+                padding: 2px 7px !important;
+                font-size: 10px !important;
+            }
+
+            /* Kasir panel: landscape split 58/42 */
+            #panel-kasir { flex-direction: row !important; }
+            #searchMenuInput {
+                padding-top: 3px !important;
+                padding-bottom: 3px !important;
+                font-size: 11px !important;
+            }
+            #categoryTabs { margin-bottom: 3px !important; }
+            #categoryTabs button {
+                padding: 2px 8px !important;
+                font-size: 10px !important;
+            }
+            /* Menu kartu lebih rendah di landscape */
+            #menuGrid > button { height: 76px !important; }
+            /* Padding bawah grid tetap karena sidebar aktif */
+            #panel-kasir > div:first-child { padding-bottom: 4px !important; }
+
+            /* Sembunyikan floating cart bar Ã¢â‚¬â€œ sidebar yang muncul */
+            #mobileCartBar { display: none !important; }
+
+            /* Cart sidebar tampil seperti desktop di landscape HP */
+            #cartSidebar {
+                position: static !important;
+                display: flex !important;
+                flex-direction: column !important;
+                width: 42% !important;
+                height: 100% !important;
+                background: white !important;
+                border-left: 1px solid #e2e8f0 !important;
+                z-index: auto !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+            /* Sembunyikan handle close drawer HP di landscape */
+            #cartSidebar .md\:hidden { display: none !important; }
+            /* Header sidebar desktop terlihat */
+            #cartSidebar .hidden.md\:flex { display: flex !important; }
+
+            /* Tinggi list items mengisi ruang */
+            #cartItems {
+                max-height: none !important;
+                flex: 1 !important;
+                overflow-y: auto !important;
+            }
+
+            /* Dapur: banner lebih compact di landscape */
+            #nowCallingBanner {
+                padding: 8px 12px !important;
+                margin-bottom: 6px !important;
+            }
+            #callingNumberDisplay { font-size: 2rem !important; }
+        }
+
+        /* =====================================================
+           PORTRAIT MOBILE Ã¢â‚¬â€œ Drawer cart & padding grid
+           ===================================================== */
+        @media (max-width: 767px) and (orientation: portrait) {
+            /* Grid menu: padding bawah besar agar kartu terakhir tidak ketutup floating bar */
+            #menuGrid { padding-bottom: 100px !important; }
+
+            /* Drawer: flex column, tombol bayar selalu di bawah */
+            #cartSidebar > div {
+                max-height: 92vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            /* List item scrollable */
+            #cartItems {
+                flex: 1 !important;
+                overflow-y: auto !important;
+                min-height: 60px !important;
+                max-height: none !important;
+            }
+
+            /* Dapur: kartu lebih compact */
+            #nowCallingBanner { padding: 10px 14px !important; }
+            #callingNumberDisplay { font-size: 2.5rem !important; }
+        }
+
+        /* =====================================================
+           TV DISPLAY GRID Ã¢â‚¬â€œ Kartu nomor: tinggi tetap, tidak stretch
+           ===================================================== */
+        #tvPreparingGrid > div,
+        #tvReadyGrid > div {
+            height: 68px !important;
+            min-height: 68px !important;
+            max-height: 68px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+        @media (min-width: 640px) {
+            #tvPreparingGrid > div,
+            #tvReadyGrid > div {
+                height: 88px !important;
+                min-height: 88px !important;
+                max-height: 88px !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            #tvPreparingGrid > div,
+            #tvReadyGrid > div {
+                height: 110px !important;
+                min-height: 110px !important;
+                max-height: 110px !important;
+            }
+        }
+
+        /* =====================================================
+           GLOBAL SCROLLBAR Ã¢â‚¬â€œ Sembunyikan scrollbar di area kunci
+           ===================================================== */
+        #menuGrid,
+        #cartItems,
+        #queueList,
+        #tvPreparingGrid,
+        #tvReadyGrid {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        #menuGrid::-webkit-scrollbar,
+        #cartItems::-webkit-scrollbar,
+        #queueList::-webkit-scrollbar,
+        #tvPreparingGrid::-webkit-scrollbar,
+        #tvReadyGrid::-webkit-scrollbar { display: none; }
+
         @keyframes slideUp {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
@@ -146,7 +299,7 @@
                 <img src="/logo.png" alt="Logo Kantin Kita" class="w-full h-full object-contain">
             </div>
             <h2 class="text-xl font-extrabold text-slate-800 tracking-tight" id="loginCanteenTitle">Kantin Kita</h2>
-            <p class="text-xs font-semibold text-orange-600 mt-0.5 text-center">Sajian Lezat & Hangat • Rasa Rumah, Harga Ramah</p>
+            <p class="text-xs font-semibold text-orange-600 mt-0.5 text-center">Sajian Lezat & Hangat ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Rasa Rumah, Harga Ramah</p>
 
             <!-- Pilihan Role Akun -->
             <div class="grid grid-cols-3 gap-2 w-full my-4">
@@ -211,7 +364,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-100 text-center w-full text-[11px] text-slate-400">
-                <span>PIN Standar: <strong>Kasir (1234)</strong> • <strong>Dapur (2222)</strong> • <strong>Admin
+                <span>PIN Standar: <strong>Kasir (1234)</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Dapur (2222)</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <strong>Admin
                         (9999)</strong></span>
             </div>
 
@@ -227,16 +380,15 @@
     <!-- ========================================================= -->
     <!-- 2. TOP HEADER NAVIGATION (RESPONSIF HP, TABLET, PC, TV)   -->
     <!-- ========================================================= -->
-    <header id="mainHeader"
-        class="bg-slate-900 text-white px-3 sm:px-4 py-2 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-2 z-20 shrink-0">
-        <div class="flex items-center justify-between w-full md:w-auto">
+    <header id="mainHeader" class="bg-slate-900 text-white px-2 sm:px-4 py-2 shadow-md flex flex-row items-center justify-between gap-1.5 z-20 shrink-0">
+        <div class="flex items-center gap-1.5 shrink-0">
             <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-sm shrink-0 bg-white p-0.5 border border-orange-400">
+                <div class="w-8 h-8 rounded-xl overflow-hidden shadow-sm shrink-0 bg-white p-0.5 border border-orange-400">
                     <img src="/logo.png" alt="Logo" class="w-full h-full object-contain">
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="font-extrabold text-sm sm:text-base leading-tight tracking-tight text-white" id="headerBrandName">Kantin Kita</h1>
+                        <h1 class="font-extrabold text-xs sm:text-base leading-tight tracking-tight text-white" id="headerBrandName">Kantin Kita</h1>
                         <span id="connectionBadge"
                             class="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -248,7 +400,7 @@
             </div>
 
             <!-- Mobile Quick Actions (Hanya Tampil di HP) -->
-            <div class="flex md:hidden items-center gap-1.5">
+            <div class="flex md:hidden items-center gap-1 shrink-0">
                 <button onclick="reprintLastReceipt()"
                     class="p-2 bg-slate-800 hover:bg-slate-700 text-orange-400 rounded-xl text-xs transition border border-slate-700"
                     title="Cetak Ulang Struk Terakhir">
@@ -271,22 +423,21 @@
         </div>
 
         <!-- Tombol Navigasi Mode (Sesuai Hak Akses Role, Scroll Halus di HP Tanpa Scrollbar Jelek) -->
-        <div class="flex items-center bg-slate-800/90 p-1 rounded-xl overflow-x-auto max-w-full gap-1 no-scrollbar shrink-0"
-            id="navTabsContainer">
+        <div class="flex items-center bg-slate-800/90 p-1 rounded-xl overflow-x-auto gap-1 no-scrollbar flex-1 mx-1" id="navTabsContainer">
             <button onclick="switchMode('kasir')" id="btn-mode-kasir"
                 class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-orange-500 text-white shrink-0">
                 <i class="fa-solid fa-cash-register"></i>
-                <span>Kasir</span>
+                <span class="hidden sm:inline">Kasir</span>
             </button>
             <button onclick="switchMode('panggilan')" id="btn-mode-panggilan"
                 class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5 shrink-0">
                 <i class="fa-solid fa-bullhorn"></i>
-                <span>Dapur</span>
+                <span class="hidden sm:inline">Dapur</span>
             </button>
             <button onclick="switchMode('display')" id="btn-mode-display"
                 class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5 shrink-0">
                 <i class="fa-solid fa-tv"></i>
-                <span>Layar TV</span>
+                <span class="hidden sm:inline">TV</span>
             </button>
             <button onclick="switchMode('pengaturan')" id="btn-mode-pengaturan"
                 class="mode-btn px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition flex items-center gap-1.5 shrink-0">
@@ -374,8 +525,7 @@
                 </div>
 
                 <!-- Grid Kartu Menu (2 Kolom di HP, 3 Kolom di Tablet, 4 Kolom di PC) -->
-                <div id="menuGrid"
-                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 overflow-y-auto pb-24 md:pb-6 pr-0.5 flex-1">
+                <div id="menuGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 overflow-y-auto pb-28 md:pb-6 pr-0.5 flex-1 no-scrollbar">
                     <!-- Rendered by JS -->
                 </div>
             </div>
@@ -427,7 +577,7 @@
                     </div>
 
                     <!-- List Items di Keranjang -->
-                    <div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2 min-h-[140px] max-h-[35vh] md:max-h-none">
+                    <div id="cartItems" class="flex-1 overflow-y-auto p-3 space-y-2 min-h-[80px] max-h-[38vh] md:max-h-none">
                         <!-- Rendered by JS -->
                     </div>
 
@@ -543,7 +693,7 @@
                 <div>
                     <span
                         class="text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">Tablet
-                        2 • Dapur</span>
+                        2 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dapur</span>
                     <h2 class="text-lg font-extrabold text-slate-800 mt-0.5">Antrean Pesanan Masuk</h2>
                 </div>
                 <div class="flex items-center gap-2">
@@ -621,8 +771,8 @@
             </div>
 
             <div class="text-center mb-3 sm:mb-5 shrink-0">
-                <h2 class="text-lg sm:text-3xl md:text-4xl font-black tracking-wider text-orange-400 uppercase">KANTIN KITA — STATUS ANTREAN</h2>
-                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Sajian Lezat & Hangat • Silakan ambil pesanan jika nomor Anda di kolom SIAP DIAMBIL</p>
+                <h2 class="text-lg sm:text-3xl md:text-4xl font-black tracking-wider text-orange-400 uppercase">KANTIN KITA ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â STATUS ANTREAN</h2>
+                <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Sajian Lezat & Hangat ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Silakan ambil pesanan jika nomor Anda di kolom SIAP DIAMBIL</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 flex-1 overflow-hidden">
@@ -663,7 +813,7 @@
             <div class="max-w-4xl mx-auto space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-800">⚙️ Pengaturan Sistem</h2>
+                        <h2 class="text-2xl font-black text-slate-800">ÃƒÂ¢Ã…Â¡Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â Pengaturan Sistem</h2>
                         <p class="text-xs sm:text-sm text-slate-500">Kelola profil perusahaan, layout struk, menu, PIN tablet, & lebih.</p>
                     </div>
                     <button onclick="switchMode('kasir')"
@@ -696,7 +846,7 @@
                     </button>
                 </div>
 
-                <!-- ═══════════ TAB 1: PROFIL PERUSAHAAN ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 1: PROFIL PERUSAHAAN ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-profil" class="settings-tab-content space-y-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-1 flex items-center gap-2 text-sm">
@@ -757,7 +907,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════ TAB 2: LAYOUT STRUK ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 2: LAYOUT STRUK ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-struk" class="settings-tab-content hidden space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Panel Kiri: Editor -->
@@ -781,7 +931,7 @@
                                 </div>
                                 <div>
                                     <label class="block font-bold text-slate-600 mb-1">Header Baris 3 (Telp / Info tambahan)</label>
-                                    <input type="text" id="receiptHeader3" placeholder="Telp: 0812-xxxx | Jam: 07.00–14.00"
+                                    <input type="text" id="receiptHeader3" placeholder="Telp: 0812-xxxx | Jam: 07.00ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“14.00"
                                         oninput="previewReceipt()"
                                         class="w-full px-3 py-2 rounded-xl border border-slate-300">
                                 </div>
@@ -847,7 +997,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════ TAB 3: PEMBAYARAN ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 3: PEMBAYARAN ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-pembayaran" class="settings-tab-content hidden">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
@@ -892,7 +1042,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════ TAB 4: PIN AKSES ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 4: PIN AKSES ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-pin" class="settings-tab-content hidden">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-extrabold text-slate-800 mb-3 flex items-center gap-2 text-sm">
@@ -904,7 +1054,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════ TAB 5: KELOLA MENU ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 5: KELOLA MENU ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
 
                 <!-- 2. Kelola PIN Akun Kasir / Dapur / Admin -->
@@ -917,7 +1067,7 @@
                     </div>
                 </div>
 
-                <!-- ═══════════ TAB 5: KELOLA MENU ═══════════ -->
+                <!-- ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â TAB 5: KELOLA MENU ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â -->
                 <div id="stab-content-menu" class="settings-tab-content hidden space-y-4">
                     <!-- 3. Form Tambah Menu Baru -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -948,13 +1098,13 @@
                             <label class="block text-xs font-bold text-slate-500 mb-1">Ikon</label>
                             <select id="inputMenuIcon"
                                 class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold bg-white focus:outline-none focus:border-orange-500">
-                                <option value="🍚">🍚 Nasi</option>
-                                <option value="🍝">🍝 Pasta</option>
-                                <option value="🍗">🍗 Ayam</option>
-                                <option value="🍜">🍜 Mie / Bakso</option>
-                                <option value="🥪">🥪 Roti / Snack</option>
-                                <option value="🥤">🥤 Minuman</option>
-                                <option value="☕">☕ Kopi / Teh</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚ÂÃ…Â¡">ÃƒÂ°Ã…Â¸Ã‚ÂÃ…Â¡ Nasi</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â Pasta</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬â€">ÃƒÂ°Ã…Â¸Ã‚ÂÃ¢â‚¬â€ Ayam</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚ÂÃ…â€œ">ÃƒÂ°Ã…Â¸Ã‚ÂÃ…â€œ Mie / Bakso</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚Â¥Ã‚Âª">ÃƒÂ°Ã…Â¸Ã‚Â¥Ã‚Âª Roti / Snack</option>
+                                <option value="ÃƒÂ°Ã…Â¸Ã‚Â¥Ã‚Â¤">ÃƒÂ°Ã…Â¸Ã‚Â¥Ã‚Â¤ Minuman</option>
+                                <option value="ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¢">ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â¢ Kopi / Teh</option>
                             </select>
                         </div>
                         <div class="sm:col-span-12 flex justify-end mt-1">
@@ -1725,7 +1875,7 @@
                 
                 card.innerHTML = `
                     <div class="flex justify-between items-start w-full">
-                        <span class="text-xl sm:text-2xl bg-slate-100 group-hover:bg-white p-2 rounded-xl transition">${item.icon || '🍽️'}</span>
+                        <span class="text-xl sm:text-2xl bg-slate-100 group-hover:bg-white p-2 rounded-xl transition">${item.icon || 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â½ÃƒÂ¯Ã‚Â¸Ã‚Â'}</span>
                         ${isOut 
                             ? '<span class="text-[10px] font-black bg-red-100 text-red-600 px-2 py-0.5 rounded-full">HABIS</span>' 
                             : '<span class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition">+</span>'}
@@ -2210,8 +2360,8 @@
                 preparingGrid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500 text-sm">Tidak ada pesanan antre</div>';
             } else {
                 preparingGrid.innerHTML = preparingOrders.map(o => `
-                    <div class="bg-slate-700/60 border border-slate-600 rounded-2xl p-4 text-center">
-                        <span class="text-3xl font-black text-amber-400">#${o.queue_formatted}</span>
+                    <div class="bg-slate-700/60 border border-slate-600 rounded-2xl text-center flex items-center justify-center" style="height:68px">
+                        <span class="text-2xl sm:text-3xl font-black text-amber-400">#${o.queue_formatted}</span>
                     </div>
                 `).join('');
             }
@@ -2220,8 +2370,8 @@
                 readyGrid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-500 text-sm">Belum ada pesanan siap</div>';
             } else {
                 readyGrid.innerHTML = readyOrders.map(o => `
-                    <div class="bg-emerald-500/20 border-2 border-emerald-400 rounded-2xl p-4 text-center calling-active">
-                        <span class="text-4xl font-black text-white">#${o.queue_formatted}</span>
+                    <div class="bg-emerald-500/20 border-2 border-emerald-400 rounded-2xl text-center calling-active flex items-center justify-center" style="height:68px">
+                        <span class="text-2xl sm:text-4xl font-black text-white">#${o.queue_formatted}</span>
                     </div>
                 `).join('');
             }
@@ -2229,7 +2379,7 @@
 
         // --- 8. MANAJEMEN MENU & PENGATURAN TOKO ---
 
-        // ── Tab navigasi pengaturan
+        // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Tab navigasi pengaturan
         function switchSettingsTab(tab) {
             document.querySelectorAll('.settings-tab-btn').forEach(btn => {
                 btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
@@ -2299,7 +2449,7 @@
             setChk('receiptShowChange', s.receipt_show_change);
         }
 
-        // ── Live preview struk
+        // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Live preview struk
         function previewReceipt() {
             const g = id => { const el = document.getElementById(id); return el ? el.value : ''; };
             const chk = id => { const el = document.getElementById(id); return el ? el.checked : true; };
@@ -2319,7 +2469,7 @@
             if (!box) return;
             box.innerHTML = `
                 <div class="text-center mb-1">
-                    ${showLogo ? '<div class="text-2xl mb-1">🏪</div>' : ''}
+                    ${showLogo ? '<div class="text-2xl mb-1">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Âª</div>' : ''}
                     <div class="font-black text-[11px]">${h1}</div>
                     ${h2 ? `<div class="text-[9px] text-slate-500">${h2}</div>` : ''}
                     ${h3 ? `<div class="text-[9px] text-slate-500">${h3}</div>` : ''}
@@ -2329,8 +2479,8 @@
                 ${showCashier ? '<div class="text-[9px] text-center text-slate-500">Kasir: Kasir 1</div>' : ''}
                 ${showQueue ? `<div class="border-t border-b border-dashed border-slate-400 py-1 my-1 text-center"><div class="text-[8px] text-slate-500 uppercase">NOMOR ORDERAN</div><div class="text-2xl font-black">#001</div></div>` : ''}
                 ${showPrice ? `<div class="text-[9px] my-1">
-                    <div class="flex justify-between"><span>Nasi Goreng ×1</span><span>Rp 15.000</span></div>
-                    <div class="flex justify-between"><span>Es Teh Manis ×2</span><span>Rp 8.000</span></div>
+                    <div class="flex justify-between"><span>Nasi Goreng ÃƒÆ’Ã¢â‚¬â€1</span><span>Rp 15.000</span></div>
+                    <div class="flex justify-between"><span>Es Teh Manis ÃƒÆ’Ã¢â‚¬â€2</span><span>Rp 8.000</span></div>
                     <div class="border-t border-dashed mt-1 pt-1 flex justify-between font-black"><span>TOTAL</span><span>Rp 23.000</span></div>
                 </div>` : ''}
                 ${showChange ? '<div class="text-[9px] text-right text-slate-600">Bayar: Rp 25.000<br>Kembali: Rp 2.000</div>' : ''}
@@ -2365,7 +2515,7 @@
                 });
                 if (!res.ok) throw new Error('Gagal menyimpan layout struk');
                 Object.assign(appSettings, payload);
-                showToast('✅ Layout struk berhasil disimpan!');
+                showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Layout struk berhasil disimpan!');
             } catch (err) { alert(err.message); }
         }
 
@@ -2391,7 +2541,7 @@
                 if (!res.ok) throw new Error('Gagal menyimpan pengaturan');
                 Object.assign(appSettings, payload);
                 applySettingsToUI();
-                showToast('✅ Pengaturan berhasil diperbarui!');
+                showToast('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Pengaturan berhasil diperbarui!');
             } catch (err) { alert(err.message); }
         }
 
@@ -2402,7 +2552,7 @@
             reader.onload = function(evt) {
                 const preview = document.getElementById('previewLogo');
                 if (preview) preview.src = evt.target.result;
-                showToast('Logo preview diperbarui. Upload ke server belum didukung secara otomatis — gunakan GitHub.');
+                showToast('Logo preview diperbarui. Upload ke server belum didukung secara otomatis ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â gunakan GitHub.');
             };
             reader.readAsDataURL(file);
         }
@@ -2481,10 +2631,10 @@
                 row.className = "px-5 py-3.5 flex items-center justify-between hover:bg-slate-50";
                 row.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <span class="text-2xl bg-slate-100 p-2 rounded-xl">${item.icon || '🍽️'}</span>
+                        <span class="text-2xl bg-slate-100 p-2 rounded-xl">${item.icon || 'ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â½ÃƒÂ¯Ã‚Â¸Ã‚Â'}</span>
                         <div>
                             <h4 class="font-extrabold text-slate-800 text-sm">${escapeHTML(item.name)}</h4>
-                            <p class="text-xs font-bold text-orange-600">${formatRupiah(item.price)} <span class="text-slate-400 font-normal">• ${item.category || 'Makanan'}</span></p>
+                            <p class="text-xs font-bold text-orange-600">${formatRupiah(item.price)} <span class="text-slate-400 font-normal">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${item.category || 'Makanan'}</span></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2722,7 +2872,7 @@
         function updateDateDisplay() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const today = new Date().toLocaleDateString('id-ID', options);
-            document.getElementById('currentDateDisplay').innerText = today + " • POS Siap Pakai";
+            document.getElementById('currentDateDisplay').innerText = today + " ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ POS Siap Pakai";
         }
 
         function formatRupiah(num) {
